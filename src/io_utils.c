@@ -101,10 +101,6 @@ String format_datarow(const DataRow* row) {
         perror("Error formatting data row.");
         abort();
     }
-
-    printf("Formatted: %s\n", formatted);
-    printf("Length of formatted: %zu\n", strlen(formatted));
-
     return string_create(formatted, strlen(formatted));
 }
 

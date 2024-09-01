@@ -58,11 +58,6 @@ DataRowGroup generate_random_temperature_sample(DataRowGroup *group, size_t n_sa
     // Generate indices to sample
     IntMatrix idxs = intmat_create(n_samples, 1);
     intmat_fill_random(&idxs, 0, group->num_rows, true, seed);
-    
-#if DEBUG
-    printf("Generated indices:\n");
-    intmat_print(&idxs);
-#endif // DEBUG
 
     // Generate data
     for (size_t i = 0; i < n_samples; ++i) {

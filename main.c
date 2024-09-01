@@ -24,7 +24,7 @@
 #include "src/args.h"
 #include "src/generate_data.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 /// Program options
 static struct argp_option options[] = {
@@ -83,7 +83,9 @@ int main(int argc, char** argv) {
     }
 
     // Parse raw data
+    printf("Parsing raw data ...\n");
     DataRowGroup parsed_data = parse_raw_data(datafile);
+    printf("Done.\n");
 
 #if DEBUG
     printf("Parsed data:\n");
@@ -91,7 +93,9 @@ int main(int argc, char** argv) {
 #endif //DEBUG
     
     // Random sample with replacement from parsed data
+    printf("Sampling %zu rows from parsed data ...\n", arg_vals.n_rows);
     DataRowGroup sampled_data = generate_random_temperature_sample(&parsed_data, arg_vals.n_rows, arg_vals.seed);
+    printf("Done.\n");
     
 #if DEBUG
     printf("Sampled data:\n");
@@ -99,11 +103,10 @@ int main(int argc, char** argv) {
 #endif // DEBUG
     
     // Write the sampled data to a file
-#if DEBUG
     printf("Writing data ...\n");
-#endif
     const char* outfile = "../data/output.txt";
     write_datarowgroup(&sampled_data, outfile);
+    printf("Done.\n");
 
     // Release all buffers
     datarowgroup_destroy(&parsed_data);
