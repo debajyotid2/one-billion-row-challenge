@@ -34,8 +34,7 @@ DataRow sample_temperature(DataRow* data) {
     }
     DataRow res = { string_copy(&data->location), data->temperature };
     double _x = (double)rand()/(double)(RAND_MAX);
-    res.temperature = exp(-0.5*((_x-res.temperature)/STDDEV) * ((_x-res.temperature)/STDDEV))\
-                                / (STDDEV * sqrt(2*M_PI));
+    res.temperature = data->temperature + STDDEV * exp(-0.5*(_x * _x) / sqrt(2*M_PI));
     return res;
 };
 
