@@ -21,13 +21,14 @@
 */
 
 #include "io_utils.h"
+#include "dtypes.h"
 
 /// Parse a single row of data from a given input array
 /// The data is expected to be present in the format of 
 /// fooo;124.0
-DataRow parse_single_row(char* row) {
+DataRow parse_single_row(const char* row) {
     assert(row != NULL);
-    char* tmp = row;
+    char* tmp = (char *)row;
     int ctr = 0;
     DataRow row_data;
     
@@ -58,8 +59,10 @@ DataRow parse_single_row(char* row) {
 
 /// Parse raw data from a source file handle
 DataRowGroup parse_raw_data(FILE* datafile) { 
-    if (datafile == NULL)
+    if (datafile == NULL) {
         perror("File handle is a null pointer.");
+        abort();
+    }
 
     // Read the data line by line into DataRow objects
     size_t lineno = 0;
@@ -90,6 +93,45 @@ DataRowGroup parse_raw_data(FILE* datafile) {
     return parsed_data;
 }
 
+/// Format a DataRow in the form of "foo;123.44"
+String format_datarow(const DataRow* row) {
+    // Format the data into the desired format
+    char formatted[BUFSIZE];
+    if (snprintf(formatted, sizeof(formatted), "%s;%.2f", row->location.data, row->temperature) < 0) {
+        perror("Error formatting data row.");
+        abort();
+    }
 
+    printf("Formatted: %s\n", formatted);
+    printf("Length of formatted: %zu\n", strlen(formatted));
 
+    return string_create(formatted, strlen(formatted));
+}
 
+/// Write a DataRowGroup to a txt file
+void write_datarowgroup(const DataRowGroup* group, const char* outfile) {
+    if (group == NULL) {
+        perror("Error: DataRowGroup pointer provided is null.");
+        abort();
+    }
+   
+    if (outfile == NULL) {
+        perror("Error: Outfile name provided is null.");
+        abort();
+    }
+
+    // Open outfile for writing
+    FILE* out = fopen(outfile, "w");
+    if (out == NULL) {
+        perror("Error: Could not open output file to write.");
+        abort();
+    }
+    
+    // Format datarows and write to outfile
+    for (size_t i = 0; i < group->num_rows; ++i) {
+        String formatted = format_datarow(&group->data[i]);
+        fprintf(out, "%s\n", formatted.data);
+    }
+
+    fclose(out);
+}

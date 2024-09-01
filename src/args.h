@@ -1,4 +1,4 @@
-/* Utilities for reading, parsing and writing data
+/* Argument parsing
 
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
@@ -20,22 +20,22 @@
 
 */
 
-#ifndef _IOUTILS_H_
-#define _IOUTILS_H_
+#ifndef _ARGS_H_
+#define _ARGS_H_
 
+#include <argp.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
-#include "dtypes.h"
 
-// Size of data buffer
-#define BUFSIZE 256
-// Default size of the initial DataRow buffer
-#define DEFAULT_SIZE 10
+/// Struct to hold all arguments
+struct arguments {
+    size_t n_rows;
+    size_t seed;
+    char raw_data_path[1024];
+};
 
-DataRow parse_single_row(const char* row);
-DataRowGroup parse_raw_data(FILE* datafile);
-void write_datarowgroup(const DataRowGroup* group, const char* outfile);
+void init_arguments(struct arguments* arg_vals);
+void print_arguments(struct arguments* arg_vals);
 
-#endif // _IOUTILS_H_
+#endif // _ARGS_H_

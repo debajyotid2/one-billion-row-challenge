@@ -1,4 +1,4 @@
-/* Utilities for reading, parsing and writing data
+/* Argument parsing
 
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
@@ -20,22 +20,24 @@
 
 */
 
-#ifndef _IOUTILS_H_
-#define _IOUTILS_H_
+#include "args.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-#include "dtypes.h"
+/// Initialize arguments to defaults
+void init_arguments(struct arguments* arg_vals) {
+    arg_vals->n_rows = 1000000000;
+    arg_vals->seed = 42;
 
-// Size of data buffer
-#define BUFSIZE 256
-// Default size of the initial DataRow buffer
-#define DEFAULT_SIZE 10
+    char data_path[] = "../data/weather_stations.txt";
+    strncpy(arg_vals->raw_data_path, data_path, sizeof(data_path));
+}
 
-DataRow parse_single_row(const char* row);
-DataRowGroup parse_raw_data(FILE* datafile);
-void write_datarowgroup(const DataRowGroup* group, const char* outfile);
-
-#endif // _IOUTILS_H_
+/// Print arguments
+void print_arguments(struct arguments* arg_vals) {
+    printf(
+        "Arguments:\n"
+        "n_rows = %zu, seed = %zu,\n"
+        "raw_data_path = %s\n",
+        arg_vals->n_rows, arg_vals->seed,
+        arg_vals->raw_data_path
+   );
+}

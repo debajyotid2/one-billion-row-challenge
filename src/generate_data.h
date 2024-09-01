@@ -1,4 +1,4 @@
-/* Utilities for reading, parsing and writing data
+/* Functions for generating data for the one billion row challenge.
 
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
@@ -20,22 +20,19 @@
 
 */
 
-#ifndef _IOUTILS_H_
-#define _IOUTILS_H_
+#ifndef _GENERATE_DATA_H_
+#define _GENERATE_DATA_H_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
+// Standard deviation for the temperature distribution
+#define STDDEV 10.0
+
+#define ONE_BILLION 1000000000
+
 #include "dtypes.h"
+#include <math.h>
+#include <matrix.h>
 
-// Size of data buffer
-#define BUFSIZE 256
-// Default size of the initial DataRow buffer
-#define DEFAULT_SIZE 10
+DataRow sample_temperature(DataRow* data);
+DataRowGroup generate_random_temperature_sample(DataRowGroup* group, size_t n_samples, size_t seed);
 
-DataRow parse_single_row(const char* row);
-DataRowGroup parse_raw_data(FILE* datafile);
-void write_datarowgroup(const DataRowGroup* group, const char* outfile);
-
-#endif // _IOUTILS_H_
+#endif // _GENERATE_DATA_H_
