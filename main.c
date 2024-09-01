@@ -29,8 +29,8 @@
 /// Program options
 static struct argp_option options[] = {
     {"raw_data_path", 'D', "RAW_DATA_PATH", 0, "Path to weather_stations.txt containing locations and mean temperatures"},
-    {"n_rows", 'N', "N_ROWS", OPTION_ARG_OPTIONAL, "Number of rows to generate"},
-    {"seed", 'S', "SEED", OPTION_ARG_OPTIONAL, "Seed for randomness"},
+    {"n_rows", 'N', "N_ROWS", 0, "Number of rows to generate"},
+    {"seed", 'S', "SEED", 0, "Seed for randomness"},
     {0}
 };
 
@@ -46,13 +46,16 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
 
     switch (key) {
         case 'N':
+            printf("Setting n_rows to %s...\n", arg);
             arguments->n_rows = atoi(arg);
             break;
         case 'S':
+            printf("Setting seed to %s...\n", arg);
             arguments->seed = atoi(arg);
             break;
         case 'D':
-            strncpy(arguments->raw_data_path, arg, sizeof(arg));
+            memset(arguments->raw_data_path, 0x0, sizeof(arguments->raw_data_path));
+            strncpy(arguments->raw_data_path, arg, strlen(arg) * sizeof(char));
             break;
         default:
             return ARGP_ERR_UNKNOWN;
