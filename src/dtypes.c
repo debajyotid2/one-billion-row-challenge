@@ -27,9 +27,11 @@
 String string_create(char* data, int length) {
     if (data == NULL) {
         perror("Null pointer provided as argument.");
+        abort();
     }
     if (length <= 0) {
         perror("Length cannot be less than 1.");
+        abort();
     }
 
     // Create a string struct instance
@@ -43,6 +45,16 @@ String string_create(char* data, int length) {
     string.data[length] = '\0';
     
     return string;
+}
+
+/// Copy a String object
+String string_copy(String* string) {
+    if (string == NULL) {
+        perror("Null pointer provided as argument.");
+        abort();
+    }
+    String newstr = string_create(string->data, string->length);
+    return newstr;
 }
 
 /// Destroy a string object
@@ -70,7 +82,27 @@ void datarow_destroy(DataRow datarow) {
     string_destroy(datarow.location);
 }
 
-// Destroy a DataRowGroup object
+/// Create a new DataRowGroup object
+DataRowGroup datarowgroup_create(size_t num_rows) {
+    if (num_rows == 0) {
+        perror("Error: num_rows cannot be zero.");
+        abort();
+    }
+    DataRowGroup res;
+    res.data = (DataRow*)calloc(num_rows, sizeof(DataRow));
+    res.num_rows = num_rows;
+
+    return res;
+};
+
+/// Print a DataRowGroup object
+void datarowgroup_print(DataRowGroup* group) {
+    if (group == NULL) return;
+    for (size_t i = 0; i < group->num_rows; ++i)
+        datarow_print(&group->data[i]);
+}
+
+/// Destroy a DataRowGroup object
 void datarowgroup_destroy(DataRowGroup* datarowgroup) {
     if (datarowgroup == NULL) return;
     int ctr = (int)(datarowgroup->num_rows - 1);

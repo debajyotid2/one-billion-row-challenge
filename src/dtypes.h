@@ -46,10 +46,13 @@ typedef struct DataRowGroup {
 } DataRowGroup;
 
 String string_create(char* data, int length);
+String string_copy(String* string);
 void string_destroy(String string);
 void string_print(const String* string);
 void datarow_print(const DataRow* datarow);
 void datarow_destroy(DataRow datarow);
+DataRowGroup datarowgroup_create(size_t num_rows);
+void datarowgroup_print(DataRowGroup* group);
 void datarowgroup_destroy(DataRowGroup* datarowgroup);
 
 #endif // _DTYPES_H_

@@ -18,8 +18,12 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <matrix.h>
 #include "src/dtypes.h"
 #include "src/io_utils.h"
+#include "src/generate_data.h"
+
+#define DEBUG 1
 
 int main(int argc, char** argv) {
     if (argc < 2) {
@@ -34,14 +38,29 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Could not read %s.\n", argv[1]);
         return 2;
     }
+
+    size_t n_samples = 20;
+    size_t seed = 32;
     
     // Parse raw data
     DataRowGroup parsed_data = parse_raw_data(datafile);
+
+#if DEBUG
+    printf("Parsed data:\n");
+    datarowgroup_print(&parsed_data);
+#endif //DEBUG
     
     // Random sample with replacement from parsed data
+    DataRowGroup sampled_data = generate_random_temperature_sample(&parsed_data, n_samples, seed);
+    
+#if DEBUG
+    printf("Sampled data:\n");
+    datarowgroup_print(&sampled_data);
+#endif // DEBUG
 
     // Release all buffers
     datarowgroup_destroy(&parsed_data);
+    datarowgroup_destroy(&sampled_data);
     
     fclose(datafile);
 }
