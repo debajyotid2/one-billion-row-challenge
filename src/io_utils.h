@@ -34,7 +34,8 @@
 // Default size of the initial DataRow buffer
 #define DEFAULT_SIZE 10
 
-DataRow parse_single_row(char* row);
+DataRow parse_single_row(const char* row);
 DataRowGroup parse_raw_data(FILE* datafile);
+void write_datarowgroup(const DataRowGroup* group, const char* outfile);
 
 #endif // _IOUTILS_H_

@@ -24,7 +24,7 @@
 
 /// Create a string by copying from
 /// passed data pointer
-String string_create(char* data, int length) {
+String string_create(const char* data, int length) {
     if (data == NULL) {
         perror("Null pointer provided as argument.");
         abort();
@@ -48,7 +48,7 @@ String string_create(char* data, int length) {
 }
 
 /// Copy a String object
-String string_copy(String* string) {
+String string_copy(const String* string) {
     if (string == NULL) {
         perror("Null pointer provided as argument.");
         abort();
@@ -96,7 +96,7 @@ DataRowGroup datarowgroup_create(size_t num_rows) {
 };
 
 /// Print a DataRowGroup object
-void datarowgroup_print(DataRowGroup* group) {
+void datarowgroup_print(const DataRowGroup* group) {
     if (group == NULL) return;
     for (size_t i = 0; i < group->num_rows; ++i)
         datarow_print(&group->data[i]);

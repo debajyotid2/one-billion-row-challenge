@@ -57,6 +57,13 @@ int main(int argc, char** argv) {
     printf("Sampled data:\n");
     datarowgroup_print(&sampled_data);
 #endif // DEBUG
+    
+    // Write the sampled data to a file
+#if DEBUG
+    printf("Writing data ...\n");
+#endif
+    const char* outfile = "../data/output.txt";
+    write_datarowgroup(&sampled_data, outfile);
 
     // Release all buffers
     datarowgroup_destroy(&parsed_data);
