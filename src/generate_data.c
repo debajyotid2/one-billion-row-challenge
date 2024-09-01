@@ -50,6 +50,8 @@ DataRowGroup generate_random_temperature_sample(DataRowGroup *group, size_t n_sa
         abort();
     }
 
+    srand(seed);
+
     // Create a new DataRowGroup
     DataRowGroup res = datarowgroup_create(n_samples);
 
