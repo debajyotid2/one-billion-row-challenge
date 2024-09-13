@@ -4,6 +4,7 @@ DEP_DIR=../external
 
 cd $DEP_DIR || exit 1
 git submodule update --init --recursive || exit 7
+git submodule foreach git pull origin main || exit 7
 
 if [ "$1" = "" ]; then
     NUM_THREADS=1
