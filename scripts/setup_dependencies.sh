@@ -28,4 +28,3 @@ source install.sh "$NUM_THREADS" || exit 1
 echo "Successfully installed yatpool"
 
 cd ../../../scripts || exit 6
-cd $DEP_DIR || exit 7
