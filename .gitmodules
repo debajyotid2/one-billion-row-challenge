@@ -1,3 +1,6 @@
 [submodule "external/matlibr"]
 	path = external/matlibr
 	url = https://github.com/debajyotid2/matlibr
+[submodule "external/yatpool"]
+	path = external/yatpool
+	url = https://github.com/debajyotid2/yatpool
