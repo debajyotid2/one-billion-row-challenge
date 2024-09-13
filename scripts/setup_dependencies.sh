@@ -1,8 +1,8 @@
 #!/bin/bash
 
-DEP_DIR=../external
+DEPENDENCY_DIR=../external
 
-cd $DEP_DIR || exit 1
+cd $DEPENDENCY_DIR || exit 1
 git submodule update --init --recursive || exit 7
 git submodule foreach git pull origin main || exit 7
 
@@ -19,9 +19,8 @@ cd ../scripts || exit 4
 source install.sh "$NUM_THREADS" || exit 5
 echo "Successfully installed matlibr and OpenBLAS"
 
-cd ../../../scripts || exit 6
-cd $DEP_DIR || exit 7
-
+cd ../../../external || exit 6
+ 
 # Build and install yatpool
 cd yatpool/scripts || exit 1
 source install.sh "$NUM_THREADS" || exit 1
