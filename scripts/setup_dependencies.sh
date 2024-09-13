@@ -16,5 +16,15 @@ cd matlibr/scripts || exit 2
 source install_openblas.sh "$NUM_THREADS" || exit 3
 cd ../scripts || exit 4
 source install.sh "$NUM_THREADS" || exit 5
-echo "Successfully installed both matlibr and OpenBLAS"
+echo "Successfully installed matlibr and OpenBLAS"
+
 cd ../../../scripts || exit 6
+cd $DEP_DIR || exit 7
+
+# Build and install yatpool
+cd yatpool/scripts || exit 1
+source install.sh "$NUM_THREADS" || exit 1
+echo "Successfully installed yatpool"
+
+cd ../../../scripts || exit 6
+cd $DEP_DIR || exit 7
