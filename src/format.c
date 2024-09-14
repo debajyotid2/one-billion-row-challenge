@@ -1,4 +1,4 @@
-/* Utilities for reading, parsing and writing data
+/* Functions for formatting data types as strings.
 
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
@@ -20,28 +20,17 @@
 
 */
 
-#ifndef _IOUTILS_H_
-#define _IOUTILS_H_
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <unistd.h>
-#include "dtypes.h"
 #include "format.h"
 
-// Size of data buffer
-#define BUFSIZE 256
-// Default size of the initial DataRow buffer
-#define DEFAULT_SIZE 10
+/// Format a DataRow in the form of "foo;123.44"
+String format_datarow(const DataRow* row) {
+    // Format the data into the desired format
+    char formatted[BUFSIZE];
+    if (snprintf(formatted, sizeof(formatted), "%s;%.2f\n", row->location.data, row->temperature) < 0) {
+        perror("Error formatting data row.");
+        abort();
+    }
+    return string_create(formatted, strlen(formatted));
+}
 
-DataRow parse_single_row(const char* row);
-DataRowGroup parse_raw_data(FILE* datafile);
-void write_datarowgroup_serial(const String* data, size_t num_rows, const char* outfile);
-void write_datarowgroup_threaded(const String* data, const char* outfile, size_t num_rows, size_t num_threads);
 
-#endif // _IOUTILS_H_

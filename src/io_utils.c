@@ -21,7 +21,86 @@
 */
 
 #include "io_utils.h"
-#include "dtypes.h"
+#include <yatpool.h>
+
+typedef struct {
+    const String* lines;
+    size_t start_lineno;
+    size_t end_lineno;
+    size_t* offset_ptr;
+} _GetOffsetArg;
+
+typedef struct {
+    char* mapped_file;
+    const String* lines;
+    size_t start_lineno;
+    size_t end_lineno;
+    size_t offset;
+} _WriteToFileArg;
+
+void _getoffsetarg_init(_GetOffsetArg** arg, 
+                       const String* lines, 
+                       size_t start_lineno,
+                       size_t end_lineno,
+                       size_t* offset_ptr) {
+    if (arg==NULL) return;
+    if (lines==NULL) return;
+    *arg = (_GetOffsetArg*)malloc(sizeof(_GetOffsetArg));
+    (*arg)->lines = lines;
+    (*arg)->start_lineno = start_lineno;
+    (*arg)->end_lineno = end_lineno;
+    (*arg)->offset_ptr = offset_ptr;
+}
+
+void _getoffsetarg_destroy(void* arg) {
+    if (arg==NULL) return;
+    _GetOffsetArg* _arg = (_GetOffsetArg*)arg;
+    free(_arg);
+}
+
+void _writetofilearg_init(_WriteToFileArg** arg,
+                         char* mapped,
+                         const String* lines,
+                         size_t start_lineno,
+                         size_t end_lineno,
+                         size_t offset) {
+    if (arg==NULL || mapped==NULL || lines==NULL) return;
+    *arg = (_WriteToFileArg*)malloc(sizeof(_WriteToFileArg));
+    (*arg)->mapped_file = mapped;
+    (*arg)->lines = lines;
+    (*arg)->start_lineno = start_lineno;
+    (*arg)->end_lineno = end_lineno;
+    (*arg)->offset = offset;
+}
+
+void _writetofilearg_destroy(void* arg) {
+    if (arg==NULL) return;
+    _WriteToFileArg* _arg = (_WriteToFileArg*)arg;
+    free(_arg);
+}
+
+/// Function for threadpool to calculate the offset required for a group of lines
+void* _get_offset(void* arg) {
+    _GetOffsetArg* offsetarg = (_GetOffsetArg*)arg;
+    *(offsetarg->offset_ptr) = 0;
+    for (size_t i = offsetarg->start_lineno; i < offsetarg->end_lineno; ++i)
+        *(offsetarg->offset_ptr) += offsetarg->lines[i].length;
+    return NULL;
+}
+
+/// Function for threadpool to write a chunk of lines into file
+void* _write_to_file(void* arg) {
+    _WriteToFileArg* currarg = (_WriteToFileArg*)arg;
+
+    size_t running_total_bytes = 0;
+    currarg->mapped_file += currarg->offset;
+
+    for (size_t i = currarg->start_lineno; i < currarg->end_lineno; ++i) {
+        memcpy(currarg->mapped_file+running_total_bytes, currarg->lines[i].data, currarg->lines[i].length);
+        running_total_bytes += currarg->lines[i].length;
+    }
+    return NULL;
+}
 
 /// Parse a single row of data from a given input array
 /// The data is expected to be present in the format of 
@@ -93,30 +172,20 @@ DataRowGroup parse_raw_data(FILE* datafile) {
     return parsed_data;
 }
 
-/// Format a DataRow in the form of "foo;123.44"
-String format_datarow(const DataRow* row) {
-    // Format the data into the desired format
-    char formatted[BUFSIZE];
-    if (snprintf(formatted, sizeof(formatted), "%s;%.2f", row->location.data, row->temperature) < 0) {
-        perror("Error formatting data row.");
-        abort();
-    }
-
-    printf("Formatted: %s\n", formatted);
-    printf("Length of formatted: %zu\n", strlen(formatted));
-
-    return string_create(formatted, strlen(formatted));
-}
-
 /// Write a DataRowGroup to a txt file
-void write_datarowgroup(const DataRowGroup* group, const char* outfile) {
-    if (group == NULL) {
-        perror("Error: DataRowGroup pointer provided is null.");
+void write_datarowgroup_serial(const String* data, size_t num_rows, const char* outfile) {
+    if (data == NULL) {
+        perror("Error: Data pointer provided is null.");
         abort();
     }
    
     if (outfile == NULL) {
         perror("Error: Outfile name provided is null.");
+        abort();
+    }
+
+    if (num_rows==0) {
+        perror("Error: num_rows provided must be non-zero.");
         abort();
     }
 
@@ -128,10 +197,105 @@ void write_datarowgroup(const DataRowGroup* group, const char* outfile) {
     }
     
     // Format datarows and write to outfile
-    for (size_t i = 0; i < group->num_rows; ++i) {
-        String formatted = format_datarow(&group->data[i]);
-        fprintf(out, "%s\n", formatted.data);
+    for (size_t i = 0; i < num_rows; ++i) {
+        fprintf(out, "%s\n", data[i].data);
     }
 
     fclose(out);
+}
+
+/// Write a DataRowGroup to a txt file using multithreading
+void write_datarowgroup_threaded(const String* data, const char* outfile, size_t num_lines, size_t num_threads) {
+    if (data == NULL) {
+        perror("Error: Data pointer provided is null.");
+        abort();
+    }
+   
+    if (outfile == NULL) {
+        perror("Error: Outfile name provided is null.");
+        abort();
+    }
+    if (num_threads==0) {
+        perror("Error: num_threads cannot be zero.");
+        abort();
+    }
+    if (num_lines==0) {
+        perror("Error: num_lines cannot be zero.");
+        abort();
+    }
+
+    YATPool* pool;
+
+    size_t fac = 8 * num_threads;
+    size_t num_tasks = num_lines / fac;
+    num_tasks = num_lines % fac == 0 ? num_tasks: num_tasks + 1;
+    
+    yatpool_init(&pool, num_threads, num_tasks);
+
+    size_t* offsets = (size_t*)calloc(num_tasks, sizeof(size_t));
+    memset(offsets, 0, num_tasks * sizeof(size_t));
+    
+    for (size_t i=0; i<num_tasks; ++i) {
+        Task* task;
+        _GetOffsetArg* arg;
+        size_t start_lineno = fac * i;
+        size_t end_lineno = fac * (i + 1);
+        end_lineno = end_lineno > num_lines ? num_lines: end_lineno;
+        _getoffsetarg_init(&arg, data, start_lineno, end_lineno, &offsets[i]);
+
+        task_init(&task, &_get_offset, arg, &_getoffsetarg_destroy);
+        yatpool_put(pool, task);
+    }
+
+    yatpool_wait(pool);
+    yatpool_destroy(pool);
+
+    for (size_t i=1; i<num_tasks; ++i)
+        offsets[i] += offsets[i-1];
+ 
+    // Open outfile for writing
+    int fd = open(outfile, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (fd==-1) {
+        perror("Error: could not open file for writing.");
+        abort();
+    }
+   
+    // Set file size
+    size_t file_size = offsets[num_tasks-1];
+    if (ftruncate(fd, file_size)==-1) {
+        perror("Error: could not truncate file to specific length.");
+        close(fd);
+        return;
+    }
+
+    char* file_buf = (char*)mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (file_buf==MAP_FAILED) {
+        perror("Error: mmap error.");
+        close(fd);
+        return;
+    }
+
+    yatpool_init(&pool, num_threads, num_tasks);
+
+    for(size_t i=0; i<num_tasks; ++i) {
+        Task* task;
+        _WriteToFileArg* arg;
+        size_t start_lineno = fac * i;
+        size_t end_lineno = fac * (i + 1);
+        end_lineno = end_lineno > num_lines ? num_lines: end_lineno;
+        size_t offset = (i == 0) ? 0: offsets[i-1];
+
+        _writetofilearg_init(&arg, file_buf, data, start_lineno, end_lineno, offset);
+
+        task_init(&task, &_write_to_file, arg, &_writetofilearg_destroy);
+        yatpool_put(pool, task);
+    }
+
+    yatpool_wait(pool);
+    yatpool_destroy(pool);
+
+    munmap(file_buf, file_size);
+    close(fd);
+
+    free(offsets);
 }
