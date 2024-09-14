@@ -28,11 +28,14 @@
 
 #define ONE_BILLION 1000000000
 
-#include "dtypes.h"
 #include <math.h>
 #include <matrix.h>
+#include <yatpool.h>
+#include "format.h"
+#include "dtypes.h"
 
 DataRow sample_temperature(DataRow* data);
-DataRowGroup generate_random_temperature_sample(DataRowGroup* group, size_t n_samples, size_t seed);
+String* generate_random_temperature_sample_serial(DataRowGroup* group, size_t n_samples, size_t seed);
+String* generate_random_temperature_sample_threaded(DataRowGroup* group, size_t n_samples, size_t seed, size_t num_threads);
 
 #endif // _GENERATE_DATA_H_

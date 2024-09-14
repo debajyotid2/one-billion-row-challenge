@@ -19,12 +19,14 @@
 */
 
 #include <matrix.h>
+#include <sys/time.h>
 #include "src/dtypes.h"
 #include "src/io_utils.h"
 #include "src/args.h"
 #include "src/generate_data.h"
 
 #define DEBUG 0
+#define TIME 1
 
 /// Program options
 static struct argp_option options[] = {
@@ -81,36 +83,73 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Could not read %s.\n", arg_vals.raw_data_path);
         return 2;
     }
+    
+    size_t num_threads = 16;
+
+#if TIME
+    struct timeval start, end;
+    long duration = 0; // microseconds
+    
+    gettimeofday(&start, NULL);
+#endif // TIME
 
     // Parse raw data
     printf("Parsing raw data ...\n");
     DataRowGroup parsed_data = parse_raw_data(datafile);
     printf("Done.\n");
 
+#if TIME
+    gettimeofday(&end, NULL);
+    duration = (end.tv_sec-start.tv_sec)*1000000+(end.tv_usec-start.tv_usec);
+    printf("Parsing raw data took %g milliseconds.\n", (double)duration / 1000.0);
+#endif // TIME
+
 #if DEBUG
     printf("Parsed data:\n");
     datarowgroup_print(&parsed_data);
-#endif //DEBUG
+#endif // DEBUG
     
+#if TIME
+    gettimeofday(&start, NULL);
+#endif // TIME
+
     // Random sample with replacement from parsed data
     printf("Sampling %zu rows from parsed data ...\n", arg_vals.n_rows);
-    DataRowGroup sampled_data = generate_random_temperature_sample(&parsed_data, arg_vals.n_rows, arg_vals.seed);
+    String* sampled_data = generate_random_temperature_sample_threaded(&parsed_data, arg_vals.n_rows, arg_vals.seed, num_threads);
     printf("Done.\n");
     
+#if TIME
+    gettimeofday(&end, NULL);
+    duration = (end.tv_sec-start.tv_sec)*1000000+(end.tv_usec-start.tv_usec);
+    printf("Sampling data took %g milliseconds.\n", (double)duration / 1000.0);
+#endif // TIME
+
 #if DEBUG
     printf("Sampled data:\n");
     datarowgroup_print(&sampled_data);
 #endif // DEBUG
-    
+
+#if TIME
+    gettimeofday(&start, NULL);
+#endif // TIME
+   
     // Write the sampled data to a file
     printf("Writing data ...\n");
     const char* outfile = "../data/output.txt";
-    write_datarowgroup(&sampled_data, outfile);
+    write_datarowgroup_threaded(sampled_data, outfile, arg_vals.n_rows, num_threads);
     printf("Done.\n");
+
+#if TIME
+    gettimeofday(&end, NULL);
+    duration = (end.tv_sec-start.tv_sec)*1000000+(end.tv_usec-start.tv_usec);
+    printf("Writing data took %g milliseconds.\n", (double)duration / 1000.0);
+#endif // TIME
 
     // Release all buffers
     datarowgroup_destroy(&parsed_data);
-    datarowgroup_destroy(&sampled_data);
+    for (size_t i = 0; i < arg_vals.n_rows; ++i)
+        string_destroy(sampled_data[i]);
+    free(sampled_data);
     
     fclose(datafile);
 }
