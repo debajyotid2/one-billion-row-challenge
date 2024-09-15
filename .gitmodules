@@ -4,3 +4,6 @@
 [submodule "external/yatpool"]
 	path = external/yatpool
 	url = https://github.com/debajyotid2/yatpool
+[submodule "external/Criterion"]
+	path = external/Criterion
+	url = https://github.com/Snaipe/Criterion.git
