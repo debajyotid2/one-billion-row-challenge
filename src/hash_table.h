@@ -30,15 +30,17 @@
 #include "linked_list.h"
 
 typedef struct hash_table hash_table_t;
-typedef size_t (*hash_function)(ll_node_t *);
+typedef size_t (*hash_function)(ll_node_t *, hash_table_t*);
 
-void ht_init(hash_table_t **, size_t, size_t (*)(ll_node_t *));
+void ht_init(hash_table_t **, size_t, hash_function);
 bool ht_insert_node(hash_table_t *, ll_node_t *);
 size_t ht_size(hash_table_t *);
+size_t ht_capacity(hash_table_t *);
+const void* ht_at(size_t, hash_table_t*);
 int *ht_get_keys(hash_table_t *);
 ll_node_t *ht_remove_node(hash_table_t *, int, void *);
 void ht_print_table(hash_table_t *);
-linked_list_t *ht_get_values(hash_table_t *, size_t);
+linked_list_t ht_get_values(hash_table_t *, size_t);
 bool ht_insert_key(hash_table_t *, int);
 bool ht_delete_key(hash_table_t *, int);
 void ht_destroy(hash_table_t *);

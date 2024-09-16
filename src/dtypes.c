@@ -63,10 +63,20 @@ void string_destroy(String string) {
     free(string.data);
 }
 
+/// Check if two strings are equal
+bool string_equal(const String* str1, const String* str2) {
+    if (str1==NULL || str2==NULL) {
+        fprintf(stderr, "Null pointer provided.\n");
+        exit(1);
+    }
+    return strcmp(str1->data, str2->data) == 0;
+}
+
+
 /// Print a String object
 void string_print(const String* string) {
     if (string == NULL) return;
-    printf("%s\n", string->data);
+    printf("%s", string->data);
 }
 
 /// Print a DataRow object

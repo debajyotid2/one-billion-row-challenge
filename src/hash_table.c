@@ -22,48 +22,45 @@
 
 #include "hash_table.h"
 
-typedef size_t (*hash_function)(ll_node_t *);
-
 typedef struct hash_table {
     hash_function hashfunc;
-    size_t table_size;
+    size_t capacity;
+    size_t size;
     linked_list_t *keys;
 } hash_table_t;
 
-void ht_init(hash_table_t **table, size_t size, hash_function a_hashfunc) {
-    assert(size>0);
+typedef size_t (*hash_function)(ll_node_t *, hash_table_t* table);
+
+void ht_init(hash_table_t **table, size_t capacity, hash_function a_hashfunc) {
+    assert(capacity>0);
     assert(a_hashfunc!=NULL);
 
     *table = (hash_table_t *)malloc(sizeof(hash_table_t));
 
     (*table)->hashfunc = a_hashfunc;
-    (*table)->table_size = size;
-    (*table)->keys = (linked_list_t *)calloc(size, sizeof(linked_list_t));
+    (*table)->capacity = capacity;
+    (*table)->size = 0;
+    (*table)->keys = (linked_list_t *)calloc(capacity, sizeof(linked_list_t));
 
-    for (size_t i=0; i<size; i++)
+    for (size_t i=0; i<capacity; i++)
         (*table)->keys[i] = NULL;
 }
 
-bool ht_insert_node(hash_table_t *table, ll_node_t *a_node) {
-    size_t index = table->hashfunc(a_node);
-    
-    if (index>table->table_size)
-        return false;
-    if (table->keys[index]==NULL)
-        ll_init(&(table->keys[index]), index, NULL);
-    ll_add_at_head(table->keys[index], a_node);
-    
-    return true;
+linked_list_t ht_get_values(hash_table_t *table, size_t index) {
+    return table->keys[index];
 }
 
-linked_list_t *ht_get_values(hash_table_t *table, size_t index) {
-    return &(table->keys[index]);
+const void* ht_at(size_t i, hash_table_t* table) {
+    linked_list_t values = ht_get_values(table, i);
+    if (values==NULL) return NULL;
+    ll_node_t* head_node = ll_find(values, 0);
+    return ll_get_node_data(head_node);
 }
 
 void ht_print_table(hash_table_t *table) {
     assert(table!=NULL);
 
-    for (size_t i=0; i<table->table_size; i++) {
+    for (size_t i=0; i<table->capacity; i++) {
         if (table->keys[i]==NULL)
             continue;
         ll_print(table->keys[i]);
@@ -72,24 +69,22 @@ void ht_print_table(hash_table_t *table) {
 
 size_t ht_size(hash_table_t *table) {
     assert(table!=NULL);
-    size_t size = 0;
-    for (size_t i=0; i<table->table_size; i++) {
-        if (table->keys[i]==NULL)
-            continue;
-        size++;
-    }
-    return size;
+    return table->size;
 }
 
-int *ht_get_keys(hash_table_t *table)
-{
+size_t ht_capacity(hash_table_t *table) {
+    assert(table!=NULL);
+    return table->capacity;
+}
+
+int *ht_get_keys(hash_table_t *table) {
     assert(table!=NULL);
     size_t size = ht_size(table);
     if (size==0)
         return NULL;
     int *keys = (int *)calloc(size, sizeof(int));
     size_t j=0;
-    for (size_t i=0; i<table->table_size; i++) {
+    for (size_t i=0; i<table->capacity; i++) {
         if (table->keys[i]==NULL)
             continue;
         keys[j] = ll_get_node_value(*(table->keys[i]));
@@ -98,14 +93,30 @@ int *ht_get_keys(hash_table_t *table)
     return keys;
 }
 
+bool ht_insert_node(hash_table_t *table, ll_node_t *a_node) {
+    size_t index = table->hashfunc(a_node, table);
+    
+    if (index>table->capacity || table->size >= table->capacity)
+        return false;
+    if (table->keys[index]==NULL)
+        ll_init(&(table->keys[index]), index, NULL);
+    // Limit the size of linked lists to be 1
+    if (ll_length(table->keys[index])==1)
+        return false;
+    ll_add_at_head(table->keys[index], a_node);
+    table->size++;
+    
+    return true;
+}
+
 bool ht_insert_key(hash_table_t *table, int value) {
     assert(table!=NULL);
 
     ll_node_t *dummy = ll_create_node(value, NULL);
-    size_t index = table->hashfunc(dummy);
+    size_t index = table->hashfunc(dummy, table);
     ll_delete_node(&dummy);
     
-    if (index>=table->table_size)
+    if (index>=table->capacity)
         return false;
     if (table->keys[index]!=NULL)
         return false;
@@ -117,10 +128,10 @@ bool ht_delete_key(hash_table_t *table, int value) {
     assert(table!=NULL);
 
     ll_node_t *dummy = ll_create_node(value, NULL);
-    size_t index = table->hashfunc(dummy);
+    size_t index = table->hashfunc(dummy, table);
     ll_delete_node(&dummy);
     
-    if (index>=table->table_size)
+    if (index>=table->capacity)
        return false;
 
     if (table->keys[index]==NULL)
@@ -128,6 +139,7 @@ bool ht_delete_key(hash_table_t *table, int value) {
 
     ll_delete_linked_list(&(table->keys[index]));
     table->keys[index] = NULL;
+    table->size--;
  
     return true;
 }
@@ -137,10 +149,10 @@ ll_node_t *ht_remove_node(hash_table_t *table, int value, void *data) {
 
     ll_node_t *removed = NULL;
     ll_node_t *dummy = ll_create_node(value, data);
-    size_t index = table->hashfunc(dummy);
+    size_t index = table->hashfunc(dummy, table);
     ll_delete_node(&dummy);
 
-    if (index>table->table_size)
+    if (index>table->capacity)
         return NULL;
     if (table->keys[index]==NULL)
         return NULL;
@@ -148,14 +160,18 @@ ll_node_t *ht_remove_node(hash_table_t *table, int value, void *data) {
     removed = ll_find(table->keys[index], value);
     if (removed!=NULL)
         removed = ll_dequeue_node(table->keys[index], removed);
-
+    if (ll_length(table->keys[index])==0) {
+        ll_delete_linked_list(&(table->keys[index]));
+        table->keys[index] = NULL;
+        table->size--;
+    }
     return removed;
 }
 
 void ht_destroy(hash_table_t *table) {
     assert(table!=NULL);
 
-    for (size_t i=0; i<table->table_size; i++) {
+    for (size_t i=0; i<table->capacity; i++) {
         if (table->keys[i]==NULL)
             continue;
         ll_delete_linked_list(&(table->keys[i]));

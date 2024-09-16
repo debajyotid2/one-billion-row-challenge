@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <assert.h>
 #include <string.h>
 
@@ -47,6 +48,7 @@ typedef struct DataRowGroup {
 
 String string_create(const char* data, int length);
 String string_copy(const String* string);
+bool string_equal(const String* str1, const String* str2);
 void string_destroy(String string);
 void string_print(const String* string);
 void datarow_print(const DataRow* datarow);

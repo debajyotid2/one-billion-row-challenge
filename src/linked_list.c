@@ -119,8 +119,6 @@ void ll_delete_linked_list(linked_list_t *list) {
         ll_dequeue_node(*list, tmp);
         ll_delete_node(&tmp);
     }
-    free(*list);
-    *list = NULL;
 }
 
 size_t ll_length(linked_list_t list) {
