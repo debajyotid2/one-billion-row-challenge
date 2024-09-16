@@ -26,23 +26,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <assert.h>
-#include "linked_list.h"
 
 typedef struct hash_table hash_table_t;
-typedef size_t (*hash_function)(ll_node_t *, hash_table_t*);
+typedef size_t (*hash_function)(void*, hash_table_t*);
 
-void ht_init(hash_table_t **, size_t, hash_function);
-bool ht_insert_node(hash_table_t *, ll_node_t *);
-size_t ht_size(hash_table_t *);
-size_t ht_capacity(hash_table_t *);
-const void* ht_at(size_t, hash_table_t*);
-int *ht_get_keys(hash_table_t *);
-ll_node_t *ht_remove_node(hash_table_t *, int, void *);
-void ht_print_table(hash_table_t *);
-linked_list_t ht_get_values(hash_table_t *, size_t);
-bool ht_insert_key(hash_table_t *, int);
-bool ht_delete_key(hash_table_t *, int);
-void ht_destroy(hash_table_t *);
+void ht_init(hash_table_t **table, size_t capacity, hash_function a_hashfunc);
+void** ht_values(hash_table_t *table);
+void* ht_at(hash_table_t* table, size_t i);
+void* ht_key_at(hash_table_t* table, size_t i);
+void ht_print_table(hash_table_t *table);
+size_t ht_size(hash_table_t *table);
+size_t ht_capacity(hash_table_t *table);
+void** ht_keys(hash_table_t *table);
+bool ht_insert(hash_table_t *table, void* key, void* value);
+void* ht_remove(hash_table_t *table, void* key);
+void ht_destroy(hash_table_t *table);
 
 #endif

@@ -1,4 +1,3 @@
-#include "../src/linked_list.h"
 #include "../src/hash_table.h"
 #include <criterion/criterion.h>
 #include <stdbool.h>
@@ -6,85 +5,79 @@
 
 const size_t TABLE_SIZE = 20;
 hash_table_t *table = NULL;
+size_t* a = NULL;
+size_t* b = NULL;
 
-size_t a_hashfunc(ll_node_t *a_node, hash_table_t* table) {
-    return ll_get_node_value(a_node)%TABLE_SIZE;
+size_t a_hashfunc(void *key, hash_table_t* table) {
+    return (*(size_t*)key)%TABLE_SIZE;
 }
 
 void testsetup(void) {
     ht_init(&table, TABLE_SIZE, &a_hashfunc);
-    ll_node_t *a = ll_create_node(24, NULL);
-    ll_node_t *b = ll_create_node(26, NULL);
-    ll_node_t *c = ll_create_node(27, NULL);
-    ll_node_t *d = ll_create_node(28, NULL);
-    ll_node_t *e = ll_create_node(20, NULL);
-    ht_insert_node(table, a);
-    ht_insert_node(table, b);
-    ht_insert_node(table, c);
-    ht_insert_node(table, d);
-    ht_insert_node(table, e);
+    size_t* a = (size_t*)calloc(5, sizeof(size_t));
+    size_t* b = (size_t*)calloc(5, sizeof(size_t));
+    a[0] = b[0] =20;
+    a[1] = b[1] =24;
+    a[2] = b[2] =23;
+    a[3] = b[3] =25;
+    a[4] = b[4] =26;
+    ht_insert(table, &a[0], &b[3]);
+    ht_insert(table, &a[1], &b[2]);
+    ht_insert(table, &a[2], &b[1]);
+    ht_insert(table, &a[3], &b[4]);
+    ht_insert(table, &a[4], &b[0]);
 }
 
 void testteardown(void) {
+    free(a);
+    free(b);
     ht_destroy(table);
+    free(table);
 }
 
 TestSuite(hash_table_tests, .init=testsetup, .fini=testteardown);
 
-Test(hash_table_tests, ht_insert_node) {
-    ll_node_t *e = ll_create_node(19, NULL);
-    cr_expect(ht_insert_node(table, e),
-            "ht_insert_node should successfully insert the node into the table.");
+Test(hash_table_tests, ht_insert) {
+    size_t* a = (size_t*)malloc(sizeof(size_t));
+    *a = 19;
+    cr_expect(ht_insert(table, a, NULL),
+            "ht_insert should successfully insert the node into the table.");
+    cr_expect(ht_insert(table, a, NULL)==false,
+            "ht_insert must fail to enter a pre-existing key to the hash table.");
 }
 
-Test(hash_table_tests, ht_insert_key) {
-    cr_expect(ht_insert_key(table, 12),
-            "ht_insert_key must successfully enter a new key to the hash table.");
-    cr_expect(ht_insert_key(table, 12)==false,
-            "ht_insert_key must fail to enter a pre-existing key to the hash table.");
+Test(hash_table_tests, ht_remove) {
+    size_t* b = (size_t*)malloc(sizeof(size_t));
+    *b = 4;
+    cr_expect(ht_remove(table, b)!=NULL,
+            "ht_remove must successfully remove an existing key from the hash table.");
+    cr_expect(ht_remove(table, b)==NULL,
+            "ht_remove must fail to delete a non-existing key from the hash table.");
 }
 
-Test(hash_table_tests, ht_delete_key) {
-    cr_expect(ht_delete_key(table, 4),
-            "ht_delete_key must successfully delete an existing key from the hash table.");
-    cr_expect(ht_delete_key(table, 4)==false,
-            "ht_delete_key must fail to delete a non-existing key from the hash table.");
-}
-
-Test(hash_table_tests, ht_get_keys) {
-    int keys[] = {4, 6, 7, 8, 0};
-    int *ret_keys = ht_get_keys(table);
+Test(hash_table_tests, ht_keys) {
+    size_t keys[] = {20, 24, 23, 25, 26};
+    void** ret_keys = ht_keys(table);
 
     for (size_t i=0; i<5; i++) {
         size_t j = 0;
         for (; j<5; ++j) {
-            if (ret_keys[j]!=keys[i])
+            if (*((size_t*)ret_keys[j])!=keys[i])
                 continue;
             break;
         }
-        cr_expect(j<5, "ht_get_keys should return the correct keys.");
+        cr_expect(j<5, "ht_keys should return the correct keys.");
     }
-    free(ret_keys);
 }
 
-Test(hash_table_tests, ht_get_values) {
-    linked_list_t list = ht_get_values(table, 4);
-    cr_expect(ll_length(list)==1,
-            "ht_get_values should return the values in a list of correct length.");
-    ll_delete_linked_list(&list);
+Test(hash_table_tests, ht_at) {
+    void* value = ht_at(table, 4);
+    cr_expect(*(size_t*)value==23,
+            "ht_at should return the correct value.");
 
-    list = ht_get_values(table, 16);
-    cr_expect(list==NULL,
-            "ht_get_values should return NULL when a key does not exist in the table.");
-}
-
-Test(hash_table_tests, ht_remove_node) {
-    ll_node_t *a_node = ht_remove_node(table, 20, NULL);
-    cr_expect(ll_get_node_value(a_node)==20,
-        "ht_remove_node should remove a node with the correct value.");
-    ll_delete_node(&a_node);
-    cr_expect(ht_remove_node(table, 20, NULL)==NULL,
-        "ht_remove_node should return NULL when trying to remove a non-existent node.");
+    value = ht_at(table, 16);
+    cr_expect(value==NULL,
+            "ht_value should return NULL when a key does not exist in the table.");
 }
 
 Test(hash_table_tests, ht_size) {
