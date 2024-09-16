@@ -29,14 +29,18 @@
 #include <string.h>
 #include <assert.h>
 
+typedef struct {
+    void* key;
+    void* value;
+} KeyValuePair;
+
 typedef struct hash_table hash_table_t;
 typedef size_t (*hash_function)(void*, hash_table_t*);
 
 void ht_init(hash_table_t **table, size_t capacity, hash_function a_hashfunc);
 void** ht_values(hash_table_t *table);
-void* ht_at(hash_table_t* table, size_t i);
-void* ht_key_at(hash_table_t* table, size_t i);
-void ht_print_table(hash_table_t *table);
+KeyValuePair ht_at(hash_table_t* table, size_t i);
+void ht_print(hash_table_t *table);
 size_t ht_size(hash_table_t *table);
 size_t ht_capacity(hash_table_t *table);
 void** ht_keys(hash_table_t *table);

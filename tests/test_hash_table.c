@@ -71,12 +71,12 @@ Test(hash_table_tests, ht_keys) {
 }
 
 Test(hash_table_tests, ht_at) {
-    void* value = ht_at(table, 4);
-    cr_expect(*(size_t*)value==23,
+    KeyValuePair kv = ht_at(table, 4);
+    cr_expect(*(size_t*)kv.value==23,
             "ht_at should return the correct value.");
 
-    value = ht_at(table, 16);
-    cr_expect(value==NULL,
+    kv = ht_at(table, 16);
+    cr_expect(kv.value==NULL,
             "ht_value should return NULL when a key does not exist in the table.");
 }
 

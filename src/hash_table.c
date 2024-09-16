@@ -22,11 +22,6 @@
 
 #include "hash_table.h"
 
-typedef struct {
-    void* key;
-    void* value;
-} KeyValuePair;
-
 typedef struct hash_table {
     hash_function hashfunc;
     size_t capacity;
@@ -59,17 +54,15 @@ void** ht_values(hash_table_t *table) {
     return values;
 }
 
-void* ht_at(hash_table_t* table, size_t i) {
-    if (table==NULL) return NULL;
-    return table->pairs[i].value;
+KeyValuePair ht_at(hash_table_t* table, size_t i) {
+    if (table==NULL) {
+        fprintf(stderr, "table pointer is null.\n");
+        exit(1);
+    }
+    return table->pairs[i];
 }
 
-void* ht_key_at(hash_table_t* table, size_t i) {
-    if (table==NULL) return NULL;
-    return table->pairs[i].key;
-}
-
-void ht_print_table(hash_table_t *table) {
+void ht_print(hash_table_t *table) {
     assert(table!=NULL);
 
     for (size_t i=0; i<table->capacity; i++) {

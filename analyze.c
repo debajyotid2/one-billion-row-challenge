@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include "src/dtypes.h"
 #include "src/io_utils.h"
 #include "src/hash_table.h"
@@ -99,8 +100,9 @@ int main(int argc, char** argv) {
         void* value = datarow_to_statsnode(row);
         if (!ht_insert(cities, &row->location, value)) {
             size_t hash = hashfunc(&row->location, cities);
-            String* loc = (String*)ht_key_at(cities, hash);
-            Stats* stats = (Stats*)ht_at(cities, hash);
+            KeyValuePair kv = ht_at(cities, hash);
+            String* loc = (String*)kv.key;
+            Stats* stats = (Stats*)kv.value;
             if (string_equal(&row->location, loc)) {
                 stats->min = stats->min > row->temperature ? row->temperature: stats->min;
                 stats->max = stats->max < row->temperature ? row->temperature: stats->max;
@@ -111,18 +113,20 @@ int main(int argc, char** argv) {
                 num_collisions++;
             }
             continue;
-            // break;
         }
         ((Stats*)value)->num_lines++;
         printf("Size: %zu, capacity: %zu\n", ht_size(cities), ht_capacity(cities));
     }
-    ht_print_table(cities);
     
     for (size_t i=0; i<ht_capacity(cities); ++i) {
-        Stats* val = (Stats*)ht_at(cities, i);
-        if (val==NULL) continue;
+        KeyValuePair kv = ht_at(cities, i);
+        String* key = (String*)kv.key;
+        Stats* value = (Stats*)kv.value;
+        if (key==NULL) continue;
+        if (value==NULL) continue;
         printf("Key %zu: ", i);
-        stats_print(val);
+        string_print(key);
+        stats_print(value);
     }
 
     fclose(infile);
