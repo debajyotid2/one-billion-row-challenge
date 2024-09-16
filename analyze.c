@@ -54,7 +54,7 @@ void* datarow_to_statsnode(DataRow* row) {
     return (void*)statrow;
 }
 
-size_t hashfunc(void* key, hash_table_t* table) {
+size_t myhash(void* key, hash_table_t* table) {
     if (table==NULL) {
         fprintf(stderr, "hash table pointer is null.\n");
         exit(1);
@@ -66,10 +66,42 @@ size_t hashfunc(void* key, hash_table_t* table) {
     }
     size_t hash = 0;
     for (size_t i=0; i<row->length; ++i) {
-        hash += (size_t)row->data[i];
+        hash += hash * 97 + (size_t)row->data[i];
     }
 
-    return (hash * (size_t)row->data[1]) % ht_capacity(table);
+    return hash % ht_capacity(table);
+}
+
+size_t djb2(void* key, hash_table_t* table) {
+    if (table==NULL) {
+        fprintf(stderr, "hash table pointer is null.\n");
+        exit(1);
+    }
+    String* row = (String*)key;
+    if (row==NULL) {
+        fprintf(stderr, "key pointer is null.\n");
+        exit(1);
+    }
+    size_t hash = 5381;
+    for (size_t i=0; i<row->length; ++i) {
+        hash = ((hash << 5) + hash) + (size_t)row->data[i];
+    }
+
+    return hash % ht_capacity(table);
+}
+
+void print_stats(hash_table_t* table) {
+    if (table==NULL) return;
+    for (size_t i=0; i<ht_capacity(table); ++i) {
+        KeyValuePair kv = ht_at(table, i);
+        String* key = (String*)kv.key;
+        Stats* value = (Stats*)kv.value;
+        if (key==NULL) continue;
+        if (value==NULL) continue;
+        printf("Key %zu: ", i);
+        string_print(key);
+        stats_print(value);
+    }
 }
 
 int main(int argc, char** argv) {
@@ -89,17 +121,20 @@ int main(int argc, char** argv) {
 
     hash_table_t* cities;
     size_t num_collisions = 0;
-    ht_init(&cities, 100, &hashfunc);
+    hash_function hashfunc = &myhash; 
+    ht_init(&cities, 50000, hashfunc);
     
     unsigned long num_lines = 0;
-    while (fgets(buf, BUFSIZE * sizeof(char), infile)) {
+    bool table_full = false;
+    while (fgets(buf, BUFSIZE * sizeof(char), infile) && !table_full) {
         num_lines++;
         if (num_lines < 3) continue;
         DataRow* row = (DataRow*)malloc(sizeof(DataRow));
         *row = parse_single_row(buf);
         void* value = datarow_to_statsnode(row);
-        if (!ht_insert(cities, &row->location, value)) {
-            size_t hash = hashfunc(&row->location, cities);
+        size_t hash = hashfunc(&row->location, cities);
+        size_t start_hash = hash;
+        while (!ht_insert_by_index(cities, hash, &row->location, value)) {
             KeyValuePair kv = ht_at(cities, hash);
             String* loc = (String*)kv.key;
             Stats* stats = (Stats*)kv.value;
@@ -108,28 +143,24 @@ int main(int argc, char** argv) {
                 stats->max = stats->max < row->temperature ? row->temperature: stats->max;
                 stats->mean = (stats->mean * (double)stats->num_lines + row->temperature) / (double)(stats->num_lines + 1.0);
                 stats->num_lines++;
+                break;
             } else {
-                printf("HASH COLLISION!\n");
+                hash = (hash+1)%ht_capacity(cities);
+                if (hash==start_hash) {
+                    table_full = true;
+                    printf("TABLE FULL\n");
+                    break;
+                }
                 num_collisions++;
             }
-            continue;
         }
         ((Stats*)value)->num_lines++;
-        printf("Size: %zu, capacity: %zu\n", ht_size(cities), ht_capacity(cities));
     }
     
-    for (size_t i=0; i<ht_capacity(cities); ++i) {
-        KeyValuePair kv = ht_at(cities, i);
-        String* key = (String*)kv.key;
-        Stats* value = (Stats*)kv.value;
-        if (key==NULL) continue;
-        if (value==NULL) continue;
-        printf("Key %zu: ", i);
-        string_print(key);
-        stats_print(value);
-    }
-
     fclose(infile);
 
+    printf("Lines of input file covered: %zu\n", num_lines);
+    printf("Size: %zu, capacity: %zu, num_collisions: %zu\n", ht_size(cities), ht_capacity(cities), num_collisions);
+    
     return EXIT_SUCCESS;
 }

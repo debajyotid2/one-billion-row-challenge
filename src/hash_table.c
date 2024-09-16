@@ -109,6 +109,21 @@ bool ht_insert(hash_table_t *table, void* key, void* value) {
     return true;
 }
 
+bool ht_insert_by_index(hash_table_t *table, size_t index, void* key, void* value) {
+    if (table==NULL||key==NULL) return false;
+    
+    if (index >= table->capacity || table->size >= table->capacity)
+        return false;
+    if (table->pairs[index].key!=NULL)
+        return false;
+    if (table->pairs[index].key==NULL)
+        table->pairs[index].key = key;
+    table->pairs[index].value = value;
+    table->size++;
+    
+    return true;
+}
+
 void* ht_remove(hash_table_t *table, void* key) {
     if (table==NULL||key==NULL) return NULL;
 

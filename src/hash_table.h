@@ -45,6 +45,7 @@ size_t ht_size(hash_table_t *table);
 size_t ht_capacity(hash_table_t *table);
 void** ht_keys(hash_table_t *table);
 bool ht_insert(hash_table_t *table, void* key, void* value);
+bool ht_insert_by_index(hash_table_t *table, size_t index, void* key, void* value);
 void* ht_remove(hash_table_t *table, void* key);
 void ht_destroy(hash_table_t *table);
 
