@@ -137,19 +137,25 @@ int main(int argc, char** argv) {
             KeyValuePair kv = ht_at(cities, hash);
             String* loc = (String*)kv.key;
             Stats* stats = (Stats*)kv.value;
+
+            // If key is already present, update statistics
             if (string_equal(row->location, loc)) {
                 stats->min = stats->min > row->temperature ? row->temperature: stats->min;
                 stats->max = stats->max < row->temperature ? row->temperature: stats->max;
                 stats->mean = (stats->mean * (double)stats->num_lines + row->temperature) / (double)(stats->num_lines + 1.0);
                 stats->num_lines++;
 
-                string_destroy(*(String*)(row->location));
+                string_destroy(*(row->location));
+                free(row->location);
                 free(value);
                 break;
             } else {
+                // Find the next empty slot to add key in
                 hash = (hash+1)%ht_capacity(cities);
                 if (hash==start_hash) {
                     table_full = true;
+                    string_destroy(*(row->location));
+                    free(value);
                     printf("TABLE FULL\n");
                     break;
                 }
