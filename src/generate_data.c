@@ -70,7 +70,10 @@ DataRow sample_temperature(DataRow* data) {
         perror("Error: null datarow pointer provided.");
         abort();
     }
-    DataRow res = { string_copy(&data->location), data->temperature };
+    DataRow res;
+    res.location = (String*)malloc(sizeof(String));
+    *(res.location) = string_copy(data->location);
+    res.temperature = data->temperature;
     double _x = (double)rand()/(double)(RAND_MAX);
     res.temperature = data->temperature + STDDEV * exp(-0.5*(_x * _x) / sqrt(2*M_PI));
     return res;

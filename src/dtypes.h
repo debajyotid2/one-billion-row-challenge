@@ -36,7 +36,7 @@ typedef struct String {
 } String;
 
 typedef struct DataRow {
-    String location;
+    String* location;
     double temperature;
 } DataRow;
 

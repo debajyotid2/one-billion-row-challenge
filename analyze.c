@@ -38,7 +38,7 @@ void stats_init(Stats** statrow, double min, double max, double mean) {
     (*statrow)->min = min;
     (*statrow)->max = max;
     (*statrow)->mean = mean;
-    (*statrow)->num_lines = 0;
+    (*statrow)->num_lines = 1;
 }
 
 void stats_print(Stats* statrow) {
@@ -128,21 +128,23 @@ int main(int argc, char** argv) {
     bool table_full = false;
     while (fgets(buf, BUFSIZE * sizeof(char), infile) && !table_full) {
         num_lines++;
-        if (num_lines < 3) continue;
         DataRow* row = (DataRow*)malloc(sizeof(DataRow));
         *row = parse_single_row(buf);
         void* value = datarow_to_statsnode(row);
-        size_t hash = hashfunc(&row->location, cities);
+        size_t hash = hashfunc(row->location, cities);
         size_t start_hash = hash;
-        while (!ht_insert_by_index(cities, hash, &row->location, value)) {
+        while (!ht_insert_by_index(cities, hash, row->location, value)) {
             KeyValuePair kv = ht_at(cities, hash);
             String* loc = (String*)kv.key;
             Stats* stats = (Stats*)kv.value;
-            if (string_equal(&row->location, loc)) {
+            if (string_equal(row->location, loc)) {
                 stats->min = stats->min > row->temperature ? row->temperature: stats->min;
                 stats->max = stats->max < row->temperature ? row->temperature: stats->max;
                 stats->mean = (stats->mean * (double)stats->num_lines + row->temperature) / (double)(stats->num_lines + 1.0);
                 stats->num_lines++;
+
+                string_destroy(*(String*)(row->location));
+                free(value);
                 break;
             } else {
                 hash = (hash+1)%ht_capacity(cities);
@@ -154,13 +156,23 @@ int main(int argc, char** argv) {
                 num_collisions++;
             }
         }
-        ((Stats*)value)->num_lines++;
+        free(row);
     }
     
     fclose(infile);
 
     printf("Lines of input file covered: %zu\n", num_lines);
     printf("Size: %zu, capacity: %zu, num_collisions: %zu\n", ht_size(cities), ht_capacity(cities), num_collisions);
+
+    for (size_t i=0; i<ht_capacity(cities); ++i) {
+        KeyValuePair kv = ht_at(cities, i);
+        if (kv.key == NULL) continue;
+        string_destroy(*(String*)(kv.key));
+        free(kv.key);
+        free(kv.value);
+    }
+    ht_destroy(cities);
+    free(cities);
     
     return EXIT_SUCCESS;
 }

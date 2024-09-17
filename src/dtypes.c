@@ -83,13 +83,14 @@ void string_print(const String* string) {
 void datarow_print(const DataRow* datarow) {
     if (datarow == NULL) return;
     printf("location: ");
-    string_print(&datarow->location);
+    string_print(datarow->location);
     printf("temperature: %g\n", datarow->temperature);
 }
 
 /// Destroy a DataRow object
 void datarow_destroy(DataRow datarow) {
-    string_destroy(datarow.location);
+    string_destroy(*(datarow.location));
+    free(datarow.location);
 }
 
 /// Create a new DataRowGroup object

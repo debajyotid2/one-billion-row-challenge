@@ -110,11 +110,12 @@ DataRow parse_single_row(const char* row) {
     char* tmp = (char *)row;
     int ctr = 0;
     DataRow row_data;
+    row_data.location = (String*)malloc(sizeof(String));
     
     // Parse location
     while(*tmp != '\n') {
         if (*tmp == ';') {
-            row_data.location = string_create(row, ctr);
+            *(row_data.location) = string_create(row, ctr);
             ctr = 0;
             break;
         }
