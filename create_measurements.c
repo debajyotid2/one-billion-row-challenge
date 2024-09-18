@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
     // Parse raw data
     printf("Parsing raw data ...\n");
     DataRowGroup parsed_data = parse_raw_data(datafile);
-    printf("Done.\n");
+    printf("Parsed %zu rows.\n", parsed_data.num_rows);
 
 #if TIME
     gettimeofday(&end, NULL);
