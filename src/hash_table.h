@@ -1,4 +1,4 @@
-/* Data types used in this application
+/* Hash table
 
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
@@ -20,41 +20,33 @@
 
 */
 
-#ifndef _DTYPES_H_
-#define _DTYPES_H_
+#ifndef HASH_TABLE_H_
+#define HASH_TABLE_H_
 
-#include <stdio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <assert.h>
 #include <string.h>
+#include <assert.h>
 
-typedef struct String {
-    char* data;
-    size_t length;
-} String;
+typedef struct {
+    void* key;
+    void* value;
+} KeyValuePair;
 
-typedef struct DataRow {
-    String* location;
-    double temperature;
-} DataRow;
+typedef struct hash_table hash_table_t;
+typedef size_t (*hash_function)(void*, hash_table_t*);
 
-// Struct to hold a group of DataRows
-typedef struct DataRowGroup {
-    DataRow* data;
-    size_t num_rows;
-} DataRowGroup;
+void ht_init(hash_table_t **table, size_t capacity, hash_function a_hashfunc);
+void** ht_values(hash_table_t *table);
+KeyValuePair ht_at(hash_table_t* table, size_t i);
+void ht_print(hash_table_t *table);
+size_t ht_size(hash_table_t *table);
+size_t ht_capacity(hash_table_t *table);
+void** ht_keys(hash_table_t *table);
+bool ht_insert(hash_table_t *table, void* key, void* value);
+bool ht_insert_by_index(hash_table_t *table, size_t index, void* key, void* value);
+void* ht_remove(hash_table_t *table, void* key);
+void ht_destroy(hash_table_t *table);
 
-String string_create(const char* data, int length);
-String string_copy(const String* string);
-bool string_equal(const String* str1, const String* str2);
-void string_destroy(String string);
-void string_print(const String* string);
-void datarow_print(const DataRow* datarow);
-void datarow_destroy(DataRow datarow);
-DataRowGroup datarowgroup_create(size_t num_rows);
-void datarowgroup_print(const DataRowGroup* group);
-void datarowgroup_destroy(DataRowGroup* datarowgroup);
-
-#endif // _DTYPES_H_
+#endif

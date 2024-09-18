@@ -26,11 +26,9 @@
 String format_datarow(const DataRow* row) {
     // Format the data into the desired format
     char formatted[BUFSIZE];
-    if (snprintf(formatted, sizeof(formatted), "%s;%.2f\n", row->location.data, row->temperature) < 0) {
+    if (snprintf(formatted, sizeof(formatted), "%s;%.2f\n", row->location->data, row->temperature) < 0) {
         perror("Error formatting data row.");
         abort();
     }
     return string_create(formatted, strlen(formatted));
 }
-
-
