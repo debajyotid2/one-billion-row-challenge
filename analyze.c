@@ -98,7 +98,6 @@ void print_stats(hash_table_t* table) {
         Stats* value = (Stats*)kv.value;
         if (key==NULL) continue;
         if (value==NULL) continue;
-        printf("Key %zu: ", i);
         string_print(key);
         stats_print(value);
     }
@@ -169,6 +168,8 @@ int main(int argc, char** argv) {
 
     printf("Lines of input file covered: %zu\n", num_lines);
     printf("Size: %zu, capacity: %zu, num_collisions: %zu\n", ht_size(cities), ht_capacity(cities), num_collisions);
+    
+    print_stats(cities);
 
     for (size_t i=0; i<ht_capacity(cities); ++i) {
         KeyValuePair kv = ht_at(cities, i);
