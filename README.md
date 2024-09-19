@@ -30,7 +30,7 @@ Only Linux-based operating systems are supported as of now.
 
 `g++` (`gcc` version 11.4.0) is the default compiler used for building the project. `cmake` (version 3.27+) is the build system used.
 
-The project depends on [matlibr](git@github.com:debajyotid2/matlibr.git), [yatpool](git@github.com:debajyotid2/yatpool.git) and [Criterion](git@github.com:Snaipe/Criterion.git) as third party dependencies. An easy way to install these is to use the `setup_dependencies.sh` script. Currently it only works with `dnf` - a package manager for Fedora, for installing `libgit2`, `meson` and `libffi`. If you do not have `dnf`, then please install them separately from the package manager for your Linux distribution.
+The project depends on [matlibr](https://github.com/debajyotid2/matlibr.git), [yatpool](https://github.com/debajyotid2/yatpool.git) and [Criterion](https://github.com/Snaipe/Criterion.git) as third party dependencies. An easy way to install these is to use the `setup_dependencies.sh` script. Currently it only works with `dnf` - a package manager for Fedora, for installing `libgit2`, `meson` and `libffi`. If you do not have `dnf`, then please install them separately from the package manager for your Linux distribution.
 
 To use `setup_dependencies.sh`, please run
 ```
