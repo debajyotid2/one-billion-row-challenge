@@ -24,6 +24,7 @@
 
 typedef struct hash_table {
     hash_function hashfunc;
+    key_comparer key_equal;
     size_t capacity;
     size_t size;
     KeyValuePair* pairs;
@@ -31,13 +32,14 @@ typedef struct hash_table {
 
 typedef size_t (*hash_function)(void*, hash_table_t*);
 
-void ht_init(hash_table_t **table, size_t capacity, hash_function a_hashfunc) {
+void ht_init(hash_table_t **table, size_t capacity, hash_function a_hashfunc, key_comparer a_keycmp) {
     assert(capacity>0);
     assert(a_hashfunc!=NULL);
 
     *table = (hash_table_t *)malloc(sizeof(hash_table_t));
 
     (*table)->hashfunc = a_hashfunc;
+    (*table)->key_equal = a_keycmp;
     (*table)->capacity = capacity;
     (*table)->size = 0;
     (*table)->pairs = (KeyValuePair*)calloc(capacity, sizeof(KeyValuePair));
@@ -54,7 +56,33 @@ void** ht_values(hash_table_t *table) {
     return values;
 }
 
-KeyValuePair ht_at(hash_table_t* table, size_t i) {
+KeyValuePair ht_at(hash_table_t* table, void* key) {
+    if (table==NULL) {
+        fprintf(stderr, "table pointer is null.\n");
+        exit(1);
+    }
+    if (key==NULL) {
+        fprintf(stderr, "key pointer is null.\n");
+        exit(1);
+    }
+    int start_index = table->hashfunc(key, table);
+    int index = start_index;
+    int n = 1;
+    while (table->pairs[index].key!=NULL) {
+        if (table->key_equal(table->pairs[index].key, key))
+            return table->pairs[index];
+        index = (index + n*n)%table->capacity;
+        if (index==start_index)
+            break;
+        n++;
+    }
+
+    fprintf(stderr, "key not found.\n");
+    KeyValuePair ret = {.key = NULL, .value=NULL};
+    return ret;
+}
+
+KeyValuePair ht_at_index(hash_table_t* table, size_t i) {
     if (table==NULL) {
         fprintf(stderr, "table pointer is null.\n");
         exit(1);
@@ -95,14 +123,25 @@ void** ht_keys(hash_table_t *table) {
 
 bool ht_insert(hash_table_t *table, void* key, void* value) {
     if (table==NULL||key==NULL) return false;
-    size_t index = table->hashfunc(key, table);
+    size_t start_index = table->hashfunc(key, table);
+    size_t index = start_index;
     
     if (index >= table->capacity || table->size >= table->capacity)
         return false;
-    if (table->pairs[index].key!=NULL)
-        return false;
-    if (table->pairs[index].key==NULL)
-        table->pairs[index].key = key;
+    int n = 1;
+    while (table->pairs[index].key!=NULL) {
+        if (table->key_equal(table->pairs[index].key, key)) {
+            if (table->pairs[index].value != NULL)
+                return false;
+            table->pairs[index].value = value;
+            return true;
+        }
+        index = (index + n*n)%table->capacity;
+        if (index==start_index)
+            return false;
+        n++;
+    }
+    table->pairs[index].key = key;
     table->pairs[index].value = value;
     table->size++;
     
@@ -127,12 +166,20 @@ bool ht_insert_by_index(hash_table_t *table, size_t index, void* key, void* valu
 void* ht_remove(hash_table_t *table, void* key) {
     if (table==NULL||key==NULL) return NULL;
 
-    size_t index = table->hashfunc(key, table);
-
-    if (index>table->capacity)
+    size_t start_index = table->hashfunc(key, table);
+    size_t index = start_index;
+    
+    if (index >= table->capacity)
         return NULL;
-    if (table->pairs[index].value==NULL)
-        return NULL;
+    int n = 1;
+    while (table->pairs[index].key!=NULL) {
+        if (table->key_equal(table->pairs[index].key, key))
+            break;
+        index = (index + n*n)%table->capacity;
+        if (index==start_index)
+            return NULL;
+        n++;
+    }
     
     void* removed = table->pairs[index].value;
     table->pairs[index].key = NULL;

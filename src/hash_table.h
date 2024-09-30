@@ -36,10 +36,12 @@ typedef struct {
 
 typedef struct hash_table hash_table_t;
 typedef size_t (*hash_function)(void*, hash_table_t*);
+typedef bool (*key_comparer)(void*, void*);
 
-void ht_init(hash_table_t **table, size_t capacity, hash_function a_hashfunc);
+void ht_init(hash_table_t **table, size_t capacity, hash_function a_hashfunc, key_comparer a_keycmp);
 void** ht_values(hash_table_t *table);
-KeyValuePair ht_at(hash_table_t* table, size_t i);
+KeyValuePair ht_at(hash_table_t* table, void* key);
+KeyValuePair ht_at_index(hash_table_t* table, size_t i);
 void ht_print(hash_table_t *table);
 size_t ht_size(hash_table_t *table);
 size_t ht_capacity(hash_table_t *table);
