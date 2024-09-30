@@ -93,7 +93,7 @@ size_t djb2(void* key, hash_table_t* table) {
 void print_stats(hash_table_t* table) {
     if (table==NULL) return;
     for (size_t i=0; i<ht_capacity(table); ++i) {
-        KeyValuePair kv = ht_at(table, i);
+        KeyValuePair kv = ht_at_index(table, i);
         String* key = (String*)kv.key;
         Stats* value = (Stats*)kv.value;
         if (key==NULL) continue;
@@ -101,6 +101,14 @@ void print_stats(hash_table_t* table) {
         string_print(key);
         stats_print(value);
     }
+}
+
+bool key_equal(void* key1, void* key2) {
+    if (key1==NULL || key2==NULL) {
+        fprintf(stderr, "null pointer given.\n");
+        exit(1);
+    }
+    return string_equal((String*)key1, (String*)key2);
 }
 
 int main(int argc, char** argv) {
@@ -121,7 +129,7 @@ int main(int argc, char** argv) {
     hash_table_t* cities;
     size_t num_collisions = 0;
     hash_function hashfunc = &myhash; 
-    ht_init(&cities, 50000, hashfunc);
+    ht_init(&cities, 50000, hashfunc, key_equal);
     
     unsigned long num_lines = 0;
     bool table_full = false;
@@ -130,36 +138,22 @@ int main(int argc, char** argv) {
         DataRow* row = (DataRow*)malloc(sizeof(DataRow));
         *row = parse_single_row(buf);
         void* value = datarow_to_statsnode(row);
-        size_t hash = hashfunc(row->location, cities);
-        size_t start_hash = hash;
-        while (!ht_insert_by_index(cities, hash, row->location, value)) {
-            KeyValuePair kv = ht_at(cities, hash);
-            String* loc = (String*)kv.key;
-            Stats* stats = (Stats*)kv.value;
 
-            // If key is already present, update statistics
-            if (string_equal(row->location, loc)) {
-                stats->min = stats->min > row->temperature ? row->temperature: stats->min;
-                stats->max = stats->max < row->temperature ? row->temperature: stats->max;
-                stats->mean = (stats->mean * (double)stats->num_lines + row->temperature) / (double)(stats->num_lines + 1.0);
-                stats->num_lines++;
-
-                string_destroy(*(row->location));
-                free(row->location);
-                free(value);
-                break;
-            } else {
-                // Find the next empty slot to add key in
-                hash = (hash+1)%ht_capacity(cities);
-                if (hash==start_hash) {
-                    table_full = true;
-                    string_destroy(*(row->location));
-                    free(value);
-                    printf("TABLE FULL\n");
-                    break;
-                }
-                num_collisions++;
+        if (!ht_insert(cities, row->location, value)) {
+            if (ht_size(cities) >= ht_capacity(cities)) {
+                table_full = true;
             }
+            KeyValuePair kv = ht_at(cities, row->location);
+            Stats* stats = (Stats*)kv.value;
+            
+            stats->min = stats->min > row->temperature ? row->temperature: stats->min;
+            stats->max = stats->max < row->temperature ? row->temperature: stats->max;                                               
+            stats->mean = (stats->mean * (double)stats->num_lines + row->temperature) / (double)(stats->num_lines + 1.0);
+            stats->num_lines++;
+            
+            string_destroy(*(row->location));
+            free(row->location);
+            free(value);
         }
         free(row);
     }
@@ -172,7 +166,7 @@ int main(int argc, char** argv) {
     print_stats(cities);
 
     for (size_t i=0; i<ht_capacity(cities); ++i) {
-        KeyValuePair kv = ht_at(cities, i);
+        KeyValuePair kv = ht_at_index(cities, i);
         if (kv.key == NULL) continue;
         string_destroy(*(String*)(kv.key));
         free(kv.key);

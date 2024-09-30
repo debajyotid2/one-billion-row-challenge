@@ -12,8 +12,15 @@ size_t a_hashfunc(void *key, hash_table_t* table) {
     return (*(size_t*)key)%TABLE_SIZE;
 }
 
+bool key_equal(void* key1, void* key2) {
+    if (key1==NULL || key2==NULL) {
+        return false;
+    }
+    return *(size_t*)key1 == *(size_t*)key2;
+}
+
 void testsetup(void) {
-    ht_init(&table, TABLE_SIZE, &a_hashfunc);
+    ht_init(&table, TABLE_SIZE, a_hashfunc, key_equal);
     size_t* a = (size_t*)calloc(5, sizeof(size_t));
     size_t* b = (size_t*)calloc(5, sizeof(size_t));
     a[0] = b[0] =20;
@@ -39,8 +46,10 @@ TestSuite(hash_table_tests, .init=testsetup, .fini=testteardown);
 
 Test(hash_table_tests, ht_insert) {
     size_t* a = (size_t*)malloc(sizeof(size_t));
+    size_t* b = (size_t*)malloc(sizeof(size_t));
     *a = 19;
-    cr_expect(ht_insert(table, a, NULL),
+    *b = 99;
+    cr_expect(ht_insert(table, a, b),
             "ht_insert should successfully insert the node into the table.");
     cr_expect(ht_insert(table, a, NULL)==false,
             "ht_insert must fail to enter a pre-existing key to the hash table.");
@@ -48,7 +57,7 @@ Test(hash_table_tests, ht_insert) {
 
 Test(hash_table_tests, ht_remove) {
     size_t* b = (size_t*)malloc(sizeof(size_t));
-    *b = 4;
+    *b = 24;
     cr_expect(ht_remove(table, b)!=NULL,
             "ht_remove must successfully remove an existing key from the hash table.");
     cr_expect(ht_remove(table, b)==NULL,
@@ -71,11 +80,13 @@ Test(hash_table_tests, ht_keys) {
 }
 
 Test(hash_table_tests, ht_at) {
-    KeyValuePair kv = ht_at(table, 4);
+    size_t key = 24;
+    KeyValuePair kv = ht_at(table, &key);
     cr_expect(*(size_t*)kv.value==23,
             "ht_at should return the correct value.");
-
-    kv = ht_at(table, 16);
+    
+    key = 16;
+    kv = ht_at(table, &key);
     cr_expect(kv.value==NULL,
             "ht_value should return NULL when a key does not exist in the table.");
 }
