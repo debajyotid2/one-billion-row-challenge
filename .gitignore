@@ -55,5 +55,5 @@ dkms.conf
 build/
 
 # Output data
-data/output.txt
+data/output*.txt
 data/stats*.txt
