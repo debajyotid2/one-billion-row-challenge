@@ -42,6 +42,7 @@ void ht_init(hash_table_t **table, size_t capacity, hash_function a_hashfunc, ke
 void** ht_values(hash_table_t *table);
 KeyValuePair ht_at(hash_table_t* table, void* key);
 KeyValuePair ht_at_index(hash_table_t* table, size_t i);
+bool ht_contains(hash_table_t* table, void* key);
 void ht_print(hash_table_t *table);
 size_t ht_size(hash_table_t *table);
 size_t ht_capacity(hash_table_t *table);

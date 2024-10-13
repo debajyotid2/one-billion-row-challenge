@@ -72,11 +72,31 @@ bool string_equal(const String* str1, const String* str2) {
     return strcmp(str1->data, str2->data) == 0;
 }
 
-
 /// Print a String object
 void string_print(const String* string) {
     if (string == NULL) return;
     printf("%s", string->data);
+}
+
+/// Create a stack allocated string
+SADataRow sa_datarow_create(const char *data, int length) {
+    SADataRow row;
+    if (length+1 > MAX_STRINGSIZE) {
+        fprintf(stderr, "SADataRow buffer overflow.\n");
+        exit(1);
+    }
+    row.location.length = length;
+    memcpy(row.location.data, data, length);
+    row.location.data[length] = '\0';
+    return row;
+}
+
+/// Print a SADataRow object
+void sa_datarow_print(const SADataRow* datarow) {
+    if (datarow == NULL) return;
+    printf("location: ");
+    printf("%s, ", datarow->location.data);
+    printf("temperature: %g\n", datarow->temperature);
 }
 
 /// Print a DataRow object

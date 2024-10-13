@@ -40,6 +40,7 @@
 #define DEFAULT_SIZE 10
 
 DataRow parse_single_row(const char* row);
+SADataRow sa_parse_single_row(const char* row);
 DataRowGroup parse_raw_data(FILE* datafile);
 void write_datarowgroup_serial(const String* data, size_t num_rows, const char* outfile);
 void write_datarowgroup_threaded(const String* data, const char* outfile, size_t num_rows, size_t num_threads);

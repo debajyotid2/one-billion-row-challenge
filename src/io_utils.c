@@ -21,6 +21,7 @@
 */
 
 #include "io_utils.h"
+#include "dtypes.h"
 #include <yatpool.h>
 
 typedef struct {
@@ -133,6 +134,38 @@ DataRow parse_single_row(const char* row) {
     String temp = string_create(tmp-ctr, ctr);
     row_data.temperature = atof(temp.data);
     string_destroy(temp);
+
+    return row_data;
+}
+
+/// Parse a single row of data from a given input array
+/// The data is expected to be present in the format of 
+/// fooo;124.0
+SADataRow sa_parse_single_row(const char* row) {
+    assert(row != NULL);
+    char* tmp = (char *)row;
+    int ctr = 0;
+    SADataRow row_data;
+    
+    // Parse location
+    while(*tmp != '\n') {
+        if (*tmp == ';') {
+            row_data = sa_datarow_create(row, ctr);
+            ctr = 0;
+            break;
+        }
+        tmp++;
+        ctr++;
+    }
+    tmp++;
+
+    // Parse temperature
+    while(*tmp != '\n') {
+        tmp++;
+        ctr++;
+    }
+
+    row_data.temperature = atof(tmp-ctr);
 
     return row_data;
 }

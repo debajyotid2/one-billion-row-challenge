@@ -77,7 +77,6 @@ KeyValuePair ht_at(hash_table_t* table, void* key) {
         n++;
     }
 
-    fprintf(stderr, "key not found.\n");
     KeyValuePair ret = {.key = NULL, .value=NULL};
     return ret;
 }
@@ -119,6 +118,12 @@ void** ht_keys(hash_table_t *table) {
         j++;
     }
     return keys;
+}
+
+bool ht_contains(hash_table_t* table, void* key) {
+    if (table==NULL||key==NULL) return false;
+    KeyValuePair res = ht_at(table, key);
+    return res.key!=NULL;
 }
 
 bool ht_insert(hash_table_t *table, void* key, void* value) {

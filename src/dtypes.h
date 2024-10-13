@@ -30,15 +30,28 @@
 #include <assert.h>
 #include <string.h>
 
+#define MAX_STRINGSIZE 1024
+
 typedef struct String {
     char* data;
     size_t length;
 } String;
 
+typedef struct {
+    char data[MAX_STRINGSIZE];
+    size_t length;
+} SAString;
+
 typedef struct DataRow {
     String* location;
     double temperature;
 } DataRow;
+
+/// Stack allocated data row
+typedef struct {
+    SAString location;
+    double temperature;
+} SADataRow;
 
 // Struct to hold a group of DataRows
 typedef struct DataRowGroup {
@@ -51,6 +64,8 @@ String string_copy(const String* string);
 bool string_equal(const String* str1, const String* str2);
 void string_destroy(String string);
 void string_print(const String* string);
+SADataRow sa_datarow_create(const char* data, int length);
+void sa_datarow_print(const SADataRow* datarow);
 void datarow_print(const DataRow* datarow);
 void datarow_destroy(DataRow datarow);
 DataRowGroup datarowgroup_create(size_t num_rows);
