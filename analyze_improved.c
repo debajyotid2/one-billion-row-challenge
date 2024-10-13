@@ -36,7 +36,7 @@ typedef struct {
 void stats_init(Stats** statrow, double min, double max, double mean);
 void stats_print(Stats* statrow);
 void* datarow_to_statsnode(DataRow* row);
-String* sa_string_to_string(SAString* str);
+char* sa_string_to_char_arr(SAString* str);
 void* sa_datarow_to_statsnode(SADataRow* row);
 size_t myhash(void* key, hash_table_t* table);
 size_t djb2(void* key, hash_table_t* table);
@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
             stats->mean = (stats->mean * (double)stats->num_lines + row.temperature) / (double)(stats->num_lines + 1.0);
             stats->num_lines++;
         } else {
-            ht_insert(cities, sa_string_to_string(&row.location)->data, sa_datarow_to_statsnode(&row));
+            ht_insert(cities, sa_string_to_char_arr(&row.location), sa_datarow_to_statsnode(&row));
         }
     }
     
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
     for (size_t i=0; i<ht_capacity(cities); ++i) {
         KeyValuePair kv = ht_at_index(cities, i);
         if (kv.key == NULL) continue;
-        free(kv.key);
+        free((char*)kv.key);
         free(kv.value);
     }
     ht_destroy(cities);
@@ -170,10 +170,11 @@ size_t djb2(void* key, hash_table_t* table) {
     return hash % ht_capacity(table);
 }
 
-String* sa_string_to_string(SAString* str) {
+char* sa_string_to_char_arr(SAString* str) {
     if (str==NULL) return NULL;
-    String* res = (String*)malloc(sizeof(String*));
-    *res = string_create(str->data, str->length);
+    char* res = (char*)calloc(str->length+1, sizeof(char));
+    memcpy(res, str->data, str->length);
+    res[str->length] = '\0';
     return res;
 };
 

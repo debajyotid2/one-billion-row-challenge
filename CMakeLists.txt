@@ -12,7 +12,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
 
 set(DEPENDENCIES openblas matlibr yatpool criterion)
-set(EXECUTABLES create_measurements analyze analyze_stackstrings)
+set(EXECUTABLES create_measurements analyze analyze_improved)
 
 file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/src/*.c)
 
