@@ -3,8 +3,6 @@ cmake_minimum_required(VERSION 3.27)
 project(onebrc)
 
 set(CMAKE_C_COMPILER g++)
-set(GENERATOR_EXECUTABLE_NAME create_measurements)
-set(ANALYZER_EXECUTABLE_NAME analyze)
 set(PROJECT_LIBRARY_NAME onebrc)
 set(PROJECT_ROOT_DIR ${CMAKE_SOURCE_DIR})
 
@@ -14,7 +12,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
 
 set(DEPENDENCIES openblas matlibr yatpool criterion)
-set(EXECUTABLES create_measurements analyze)
+set(EXECUTABLES create_measurements analyze analyze_stackstrings)
 
 file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/src/*.c)
 
