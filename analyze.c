@@ -127,7 +127,6 @@ int main(int argc, char** argv) {
     char buf[BUFSIZE] = {'\0'};
 
     hash_table_t* cities;
-    size_t num_collisions = 0;
     hash_function hashfunc = &myhash; 
     ht_init(&cities, 50000, hashfunc, key_equal);
     
@@ -161,7 +160,7 @@ int main(int argc, char** argv) {
     fclose(infile);
 
     printf("Lines of input file covered: %zu\n", num_lines);
-    printf("Size: %zu, capacity: %zu, num_collisions: %zu\n", ht_size(cities), ht_capacity(cities), num_collisions);
+    printf("Size: %zu, capacity: %zu\n", ht_size(cities), ht_capacity(cities));
     
     print_stats(cities);
 
