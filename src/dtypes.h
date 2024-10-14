@@ -32,7 +32,7 @@
 
 #define MAX_STRINGSIZE 2048
 
-typedef struct String {
+typedef struct {
     char* data;
     size_t length;
 } String;
@@ -42,7 +42,7 @@ typedef struct {
     size_t length;
 } SAString;
 
-typedef struct DataRow {
+typedef struct {
     String* location;
     double temperature;
 } DataRow;
@@ -54,11 +54,19 @@ typedef struct {
 } SADataRow;
 
 // Struct to hold a group of DataRows
-typedef struct DataRowGroup {
+typedef struct {
     DataRow* data;
     size_t num_rows;
 } DataRowGroup;
 
+// Arena allocator
+typedef struct arena Arena;
+
+void arena_create(Arena** arena, size_t capacity);
+void* arena_allocate(Arena* arena, size_t size);
+size_t arena_size(Arena* arena);
+size_t arena_capacity(Arena* arena);
+void arena_destroy(Arena* arena);
 String string_create(const char* data, int length);
 String string_copy(const String* string);
 bool string_equal(const String* str1, const String* str2);

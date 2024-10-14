@@ -8,11 +8,9 @@ set(PROJECT_ROOT_DIR ${CMAKE_SOURCE_DIR})
 
 set(CMAKE_PREFIX_PATH /usr/local/lib /opt/OpenBLAS/lib)
 set(CMAKE_MODULE_PATH ${PROJECT_ROOT_DIR}/cmake)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
 
 set(DEPENDENCIES openblas matlibr yatpool criterion)
-set(EXECUTABLES create_measurements analyze_v1 analyze_v2 analyze_v3)
+set(EXECUTABLES create_measurements analyze_v1 analyze_v2 analyze_v3 analyze_v4)
 
 file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/src/*.c)
 

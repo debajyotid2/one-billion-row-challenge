@@ -22,6 +22,50 @@
 
 #include "dtypes.h"
 
+/// Arena allocator
+typedef struct arena {
+    char* data;
+    size_t size;
+    size_t capacity;
+} Arena;
+
+/// Create an arena allocator
+void arena_create(Arena** arena, size_t capacity) {
+    if (arena==NULL || capacity==0) return;
+    *arena = (Arena*)malloc(sizeof(Arena));
+    (*arena)->data = (char*)calloc(capacity, sizeof(char));
+    (*arena)->size = 0;
+    (*arena)->capacity = capacity;
+};
+
+/// Allocate memory in an arena allocator
+void* arena_allocate(Arena* arena, size_t size) {
+    if (arena==NULL || size==0) return NULL;
+    if (arena->size + size > arena->capacity) return NULL;
+    void* ret = &arena->data[arena->size];
+    arena->size += size;
+    return ret;
+};
+
+/// Return the current arena size
+size_t arena_size(Arena* arena) {
+    if (arena==NULL) return 0;
+    return arena->size;
+}
+
+/// Return the arena capacity
+size_t arena_capacity(Arena* arena) {
+    if (arena==NULL) return 0;
+    return arena->capacity;
+}
+
+/// Destroy an arena allocator
+void arena_destroy(Arena* arena) {
+    if (arena==NULL) return;
+    free(arena->data);
+    free(arena);
+};
+
 /// Create a string by copying from
 /// passed data pointer
 String string_create(const char* data, int length) {
