@@ -12,7 +12,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
 
 set(DEPENDENCIES openblas matlibr yatpool criterion)
-set(EXECUTABLES create_measurements analyze analyze_improved)
+set(EXECUTABLES create_measurements analyze_v1 analyze_v2 analyze_v3)
 
 file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/src/*.c)
 
@@ -23,19 +23,12 @@ foreach(dep ${DEPENDENCIES})
 endforeach()
 
 foreach(exe ${EXECUTABLES})
-    add_executable(${exe} ${exe}.c ${SOURCES})
+    add_executable(${exe} ${exe}.c)
     target_include_directories(${exe} PUBLIC ${CMAKE_SOURCE_DIR}/src)
-    target_include_directories(${exe} PRIVATE 
-        ${YATPOOL_INCLUDE_DIRS}
-        ${MATLIBR_INCLUDE_DIRS}
-        ${OPENBLAS_INCLUDE_DIRS}
-    )
     target_link_libraries(${exe} PRIVATE
-        m 
-        dl 
         ${PROJECT_LIBRARY_NAME}
         ${YATPOOL_LIBRARIES}
-        ${MATLIBR_LIBRARIES} 
+        ${MATLIBR_LIBRARIES}
         ${OPENBLAS_LIBRARIES}
     )
 endforeach()

@@ -81,6 +81,31 @@ KeyValuePair ht_at(hash_table_t* table, void* key) {
     return ret;
 }
 
+KeyValuePair ht_twos_pow_at(hash_table_t* table, void* key) {
+    if (table==NULL) {
+        fprintf(stderr, "table pointer is null.\n");
+        exit(1);
+    }
+    if (key==NULL) {
+        fprintf(stderr, "key pointer is null.\n");
+        exit(1);
+    }
+    int start_index = table->hashfunc(key, table);
+    int index = start_index;
+    int n = 1;
+    while (table->pairs[index].key!=NULL) {
+        if (table->key_equal(table->pairs[index].key, key))
+            return table->pairs[index];
+        index = (index + n*n) & (table->capacity - 1);
+        if (index==start_index)
+            break;
+        n++;
+    }
+
+    KeyValuePair ret = {.key = NULL, .value=NULL};
+    return ret;
+}
+
 KeyValuePair ht_at_index(hash_table_t* table, size_t i) {
     if (table==NULL) {
         fprintf(stderr, "table pointer is null.\n");
@@ -126,6 +151,12 @@ bool ht_contains(hash_table_t* table, void* key) {
     return res.key!=NULL;
 }
 
+bool ht_twos_pow_contains(hash_table_t* table, void* key) {
+    if (table==NULL||key==NULL) return false;
+    KeyValuePair res = ht_twos_pow_at(table, key);
+    return res.key!=NULL;
+}
+
 bool ht_insert(hash_table_t *table, void* key, void* value) {
     if (table==NULL||key==NULL) return false;
     size_t start_index = table->hashfunc(key, table);
@@ -142,6 +173,33 @@ bool ht_insert(hash_table_t *table, void* key, void* value) {
             return true;
         }
         index = (index + n*n)%table->capacity;
+        if (index==start_index)
+            return false;
+        n++;
+    }
+    table->pairs[index].key = key;
+    table->pairs[index].value = value;
+    table->size++;
+    
+    return true;
+}
+
+bool ht_twos_pow_insert(hash_table_t *table, void* key, void* value) {
+    if (table==NULL||key==NULL) return false;
+    size_t start_index = table->hashfunc(key, table);
+    size_t index = start_index;
+    
+    if (index >= table->capacity || table->size >= table->capacity)
+        return false;
+    int n = 1;
+    while (table->pairs[index].key!=NULL) {
+        if (table->key_equal(table->pairs[index].key, key)) {
+            if (table->pairs[index].value != NULL)
+                return false;
+            table->pairs[index].value = value;
+            return true;
+        }
+        index = (index + n*n) & (table->capacity-1);
         if (index==start_index)
             return false;
         n++;
@@ -181,6 +239,31 @@ void* ht_remove(hash_table_t *table, void* key) {
         if (table->key_equal(table->pairs[index].key, key))
             break;
         index = (index + n*n)%table->capacity;
+        if (index==start_index)
+            return NULL;
+        n++;
+    }
+    
+    void* removed = table->pairs[index].value;
+    table->pairs[index].key = NULL;
+    table->pairs[index].value = NULL;
+    table->size--;
+    return removed;
+}
+
+void* ht_twos_pow_remove(hash_table_t *table, void* key) {
+    if (table==NULL||key==NULL) return NULL;
+
+    size_t start_index = table->hashfunc(key, table);
+    size_t index = start_index;
+    
+    if (index >= table->capacity)
+        return NULL;
+    int n = 1;
+    while (table->pairs[index].key!=NULL) {
+        if (table->key_equal(table->pairs[index].key, key))
+            break;
+        index = (index + n*n) & (table->capacity - 1);
         if (index==start_index)
             return NULL;
         n++;

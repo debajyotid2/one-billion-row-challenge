@@ -41,15 +41,19 @@ typedef bool (*key_comparer)(void*, void*);
 void ht_init(hash_table_t **table, size_t capacity, hash_function a_hashfunc, key_comparer a_keycmp);
 void** ht_values(hash_table_t *table);
 KeyValuePair ht_at(hash_table_t* table, void* key);
+KeyValuePair ht_twos_pow_at(hash_table_t* table, void* key);
 KeyValuePair ht_at_index(hash_table_t* table, size_t i);
 bool ht_contains(hash_table_t* table, void* key);
+bool ht_twos_pow_contains(hash_table_t* table, void* key);
 void ht_print(hash_table_t *table);
 size_t ht_size(hash_table_t *table);
 size_t ht_capacity(hash_table_t *table);
 void** ht_keys(hash_table_t *table);
 bool ht_insert(hash_table_t *table, void* key, void* value);
+bool ht_twos_pow_insert(hash_table_t *table, void* key, void* value);
 bool ht_insert_by_index(hash_table_t *table, size_t index, void* key, void* value);
 void* ht_remove(hash_table_t *table, void* key);
+void* ht_twos_pow_remove(hash_table_t *table, void* key);
 void ht_destroy(hash_table_t *table);
 
 #endif

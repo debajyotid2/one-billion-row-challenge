@@ -148,24 +148,16 @@ SADataRow sa_parse_single_row(const char* row) {
     SADataRow row_data;
     
     // Parse location
-    while(*tmp != '\n') {
-        if (*tmp == ';') {
-            row_data = sa_datarow_create(row, ctr);
-            ctr = 0;
-            break;
-        }
-        tmp++;
-        ctr++;
+    tmp = strchr(tmp, ';');
+    if (tmp == NULL) {
+        fprintf(stderr, "No semicolon in line \"%s\"\n", row);
+        exit(1);
     }
+    row_data = sa_datarow_create(row, tmp-row);
     tmp++;
 
     // Parse temperature
-    while(*tmp != '\n') {
-        tmp++;
-        ctr++;
-    }
-
-    row_data.temperature = atof(tmp-ctr);
+    row_data.temperature = atof(tmp);
 
     return row_data;
 }

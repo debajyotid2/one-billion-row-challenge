@@ -82,7 +82,7 @@ void string_print(const String* string) {
 SADataRow sa_datarow_create(const char *data, int length) {
     SADataRow row;
     if (length+1 > MAX_STRINGSIZE) {
-        fprintf(stderr, "SADataRow buffer overflow.\n");
+        fprintf(stderr, "SADataRow buffer overflow with length %d and bufsize %d.\n", length, MAX_STRINGSIZE);
         exit(1);
     }
     row.location.length = length;

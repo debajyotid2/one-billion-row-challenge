@@ -30,7 +30,7 @@
 #include <assert.h>
 #include <string.h>
 
-#define MAX_STRINGSIZE 1024
+#define MAX_STRINGSIZE 2048
 
 typedef struct String {
     char* data;
