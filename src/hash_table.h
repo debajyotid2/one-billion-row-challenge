@@ -36,7 +36,7 @@ typedef struct {
 
 typedef struct hash_table hash_table_t;
 typedef size_t (*hash_function)(void*, hash_table_t*);
-typedef bool (*key_comparer)(void*, void*);
+typedef int (*key_comparer)(void*, void*);
 
 void ht_init(hash_table_t **table, size_t capacity, hash_function a_hashfunc, key_comparer a_keycmp);
 void** ht_values(hash_table_t *table);

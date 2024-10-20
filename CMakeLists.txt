@@ -31,5 +31,7 @@ foreach(exe ${EXECUTABLES})
     )
 endforeach()
 
+add_executable(analyze_cpp analyze.cpp)
+
 enable_testing()
 add_subdirectory(tests)

@@ -12,15 +12,21 @@ size_t a_hashfunc(void *key, hash_table_t* table) {
     return (*(size_t*)key)%TABLE_SIZE;
 }
 
-bool key_equal(void* key1, void* key2) {
+int keycmp(void* key1, void* key2) {
     if (key1==NULL || key2==NULL) {
         return false;
     }
-    return *(size_t*)key1 == *(size_t*)key2;
+    size_t a = *(size_t*)key1;
+    size_t b = *(size_t*)key2;
+    if (a == b) {
+        return 0;
+    } else if (a < b) {
+        return -1;
+    } else return 1;
 }
 
 void testsetup(void) {
-    ht_init(&table, TABLE_SIZE, a_hashfunc, key_equal);
+    ht_init(&table, TABLE_SIZE, a_hashfunc, keycmp);
     size_t* a = (size_t*)calloc(5, sizeof(size_t));
     size_t* b = (size_t*)calloc(5, sizeof(size_t));
     a[0] = b[0] =20;

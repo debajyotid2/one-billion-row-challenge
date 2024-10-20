@@ -103,12 +103,12 @@ void print_stats(hash_table_t* table) {
     }
 }
 
-bool key_equal(void* key1, void* key2) {
+int keycmp(void* key1, void* key2) {
     if (key1==NULL || key2==NULL) {
         fprintf(stderr, "null pointer given.\n");
         exit(1);
     }
-    return string_equal((String*)key1, (String*)key2);
+    return strncmp(((String*)key1)->data, ((String*)key2)->data, ((String*)key1)->length);
 }
 
 int main(int argc, char** argv) {
@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
 
     hash_table_t* cities;
     hash_function hashfunc = &myhash; 
-    ht_init(&cities, 50000, hashfunc, key_equal);
+    ht_init(&cities, 50000, hashfunc, keycmp);
     
     unsigned long num_lines = 0;
     bool table_full = false;

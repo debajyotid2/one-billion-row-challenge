@@ -41,7 +41,7 @@ static void* sa_datarow_to_statsnode(SADataRow* row);
 static size_t myhash(void* key, hash_table_t* table);
 static size_t djb2(void* key, hash_table_t* table);
 static void print_stats(hash_table_t* table);
-static bool key_equal(void* key1, void* key2);
+static int keycmp(void* key1, void* key2);
 
 int main(int argc, char** argv) {
     if (argc!=2) {
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
     hash_table_t* cities;
     hash_function hashfunc = &myhash; 
-    ht_init(&cities, MAX_TBL_SIZE, hashfunc, key_equal);
+    ht_init(&cities, MAX_TBL_SIZE, hashfunc, keycmp);
     
     unsigned long num_lines = 0;
     while (fgets(buf, BUFSIZE * sizeof(char), infile)) {
@@ -187,12 +187,12 @@ static void print_stats(hash_table_t* table) {
     }
 }
 
-static bool key_equal(void* dictkey, void* extkey) {
+static int keycmp(void* dictkey, void* extkey) {
     if (dictkey==NULL || extkey==NULL) {
         fprintf(stderr, "null pointer given.\n");
         exit(1);
     }
     char* str1 = (char*)dictkey;
     char* str2 = (char*)extkey;
-    return strcmp(str1, str2) == 0;
+    return strcmp(str1, str2);
 }

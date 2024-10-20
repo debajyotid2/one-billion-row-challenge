@@ -24,7 +24,7 @@
 
 typedef struct hash_table {
     hash_function hashfunc;
-    key_comparer key_equal;
+    key_comparer keycmp;
     size_t capacity;
     size_t size;
     KeyValuePair* pairs;
@@ -39,7 +39,7 @@ void ht_init(hash_table_t **table, size_t capacity, hash_function a_hashfunc, ke
     *table = (hash_table_t *)malloc(sizeof(hash_table_t));
 
     (*table)->hashfunc = a_hashfunc;
-    (*table)->key_equal = a_keycmp;
+    (*table)->keycmp = a_keycmp;
     (*table)->capacity = capacity;
     (*table)->size = 0;
     (*table)->pairs = (KeyValuePair*)calloc(capacity, sizeof(KeyValuePair));
@@ -69,7 +69,7 @@ KeyValuePair ht_at(hash_table_t* table, void* key) {
     int index = start_index;
     int n = 1;
     while (table->pairs[index].key!=NULL) {
-        if (table->key_equal(table->pairs[index].key, key))
+        if (table->keycmp(table->pairs[index].key, key) == 0)
             return table->pairs[index];
         index = (index + n*n)%table->capacity;
         if (index==start_index)
@@ -94,7 +94,7 @@ KeyValuePair ht_twos_pow_at(hash_table_t* table, void* key) {
     int index = start_index;
     int n = 1;
     while (table->pairs[index].key!=NULL) {
-        if (table->key_equal(table->pairs[index].key, key))
+        if (table->keycmp(table->pairs[index].key, key) == 0)
             return table->pairs[index];
         index = (index + n*n) & (table->capacity - 1);
         if (index==start_index)
@@ -166,7 +166,7 @@ bool ht_insert(hash_table_t *table, void* key, void* value) {
         return false;
     int n = 1;
     while (table->pairs[index].key!=NULL) {
-        if (table->key_equal(table->pairs[index].key, key)) {
+        if (table->keycmp(table->pairs[index].key, key) == 0) {
             if (table->pairs[index].value != NULL)
                 return false;
             table->pairs[index].value = value;
@@ -193,7 +193,7 @@ bool ht_twos_pow_insert(hash_table_t *table, void* key, void* value) {
         return false;
     int n = 1;
     while (table->pairs[index].key!=NULL) {
-        if (table->key_equal(table->pairs[index].key, key)) {
+        if (table->keycmp(table->pairs[index].key, key) == 0) {
             if (table->pairs[index].value != NULL)
                 return false;
             table->pairs[index].value = value;
@@ -236,7 +236,7 @@ void* ht_remove(hash_table_t *table, void* key) {
         return NULL;
     int n = 1;
     while (table->pairs[index].key!=NULL) {
-        if (table->key_equal(table->pairs[index].key, key))
+        if (table->keycmp(table->pairs[index].key, key) == 0)
             break;
         index = (index + n*n)%table->capacity;
         if (index==start_index)
@@ -261,7 +261,7 @@ void* ht_twos_pow_remove(hash_table_t *table, void* key) {
         return NULL;
     int n = 1;
     while (table->pairs[index].key!=NULL) {
-        if (table->key_equal(table->pairs[index].key, key))
+        if (table->keycmp(table->pairs[index].key, key) == 0)
             break;
         index = (index + n*n) & (table->capacity - 1);
         if (index==start_index)
