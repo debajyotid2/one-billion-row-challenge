@@ -12,7 +12,7 @@ size_t a_hashfunc(void *key, hash_table_t* table) {
     return (*(size_t*)key)%TABLE_SIZE;
 }
 
-int keycmp(void* key1, void* key2) {
+int keycmp(const void* key1, const void* key2) {
     if (key1==NULL || key2==NULL) {
         return false;
     }

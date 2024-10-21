@@ -43,7 +43,7 @@ void stats_init(Stats** statrow, double min, double max, double mean) {
 
 void stats_print(Stats* statrow) {
     if (statrow==NULL) return;
-    printf("=%.1f/%.1f/%.1f\n", statrow->min, statrow->max, statrow->mean);
+    printf("=%.1f/%.1f/%.1f", statrow->min, statrow->mean, statrow->max);
 }
 
 void* datarow_to_statsnode(DataRow* row) {
@@ -92,22 +92,43 @@ size_t djb2(void* key, hash_table_t* table) {
 
 void print_stats(hash_table_t* table) {
     if (table==NULL) return;
-    for (size_t i=0; i<ht_capacity(table); ++i) {
+    size_t capacity = ht_capacity(table);
+    printf("{");
+    for (size_t i=0; i<capacity-1; ++i) {
         KeyValuePair kv = ht_at_index(table, i);
         String* key = (String*)kv.key;
         Stats* value = (Stats*)kv.value;
-        if (key==NULL) continue;
-        if (value==NULL) continue;
+        if (key==NULL||value==NULL) continue;
         string_print(key);
         stats_print(value);
+        printf(", ");
     }
+    KeyValuePair kv = ht_at_index(table, capacity-1);
+    String* key = (String*)kv.key;
+    Stats* value = (Stats*)kv.value;
+    if (key==NULL||value==NULL) {
+        printf("}\n");
+        return;
+    };
+    string_print(key);
+    stats_print(value);
+    printf("}\n");
 }
 
-int keycmp(void* key1, void* key2) {
+int keycmp(const void* key1, const void* key2) {
     if (key1==NULL || key2==NULL) {
         fprintf(stderr, "null pointer given.\n");
         exit(1);
     }
+    return strncmp(((String*)key1)->data, ((String*)key2)->data, ((String*)key1)->length);
+}
+
+int qsort_comparer(const void* kv1, const void* kv2) {
+    if (kv1==NULL || kv2==NULL) return 0;
+    void* key1 = ((KeyValuePair*)kv1)->key;
+    void* key2 = ((KeyValuePair*)kv2)->key;
+    if (key1==NULL) return -1;
+    if (key2==NULL) return 1;
     return strncmp(((String*)key1)->data, ((String*)key2)->data, ((String*)key1)->length);
 }
 
@@ -159,9 +180,9 @@ int main(int argc, char** argv) {
     
     fclose(infile);
 
-    printf("Lines of input file covered: %zu\n", num_lines);
-    printf("Size: %zu, capacity: %zu\n", ht_size(cities), ht_capacity(cities));
-    
+    // Sort hash table
+    ht_sort_by_key(cities, qsort_comparer);
+
     print_stats(cities);
 
     for (size_t i=0; i<ht_capacity(cities); ++i) {

@@ -20,6 +20,7 @@
 
 #include <cstdio>
 #include <fstream>
+#include <map>
 #include <unordered_map>
 
 #define DELIM ";"
@@ -77,12 +78,15 @@ int main(int argc, char** argv) {
         }
         (*cities)[res.first] = Stats(res.second, res.second, res.second);
     }
-
-    for (const auto& it: *cities) {
-        printf("%s=%.1f/%.1f/%.1f\n", it.first.data(), it.second.min, it.second.max, it.second.mean);
+    std::map<std::string, Stats>* cities_sorted = new std::map<std::string, Stats>(cities->begin(), cities->end());
+    printf("{");
+    for (const auto& it: *cities_sorted) {
+        printf("%s=%.1f/%.1f/%.1f, ", it.first.data(), it.second.min, it.second.mean, it.second.max);
     }
+    printf("}");
 
     delete cities;
+    delete cities_sorted;
     
     file.close();
     return 0;

@@ -27,21 +27,21 @@
 
 #define BUFSIZE 256
 #define MAX_TBL_SIZE 65536
-
 typedef struct {
     double min, max, sum;
     size_t num_lines;
 } Stats;
 
-static void stats_init(Stats** statrow, double min, double max, double sum);
+static void stats_init(Arena* arena, Stats** statrow, double min, double max, double sum);
 static void stats_print(Stats* statrow);
-static void* datarow_to_statsnode(DataRow* row);
-static char* sa_string_to_char_arr(SAString* str);
-static void* sa_datarow_to_statsnode(SADataRow* row);
+static void* datarow_to_statsnode(Arena* arena, DataRow* row);
+static char* sa_string_to_char_arr(Arena* arena, SAString* str);
+static void* sa_datarow_to_statsnode(Arena* arena, SADataRow* row);
 static size_t myhash(void* key, hash_table_t* table);
 static size_t djb2(void* key, hash_table_t* table);
 static void print_stats(hash_table_t* table);
-static int keycmp(void* key1, void* key2);
+static int keycmp(const void* key1, const void* key2);
+static int qsort_comparer(const void* kv1, const void* kv2);
 
 int main(int argc, char** argv) {
     if (argc!=2) {
@@ -58,6 +58,8 @@ int main(int argc, char** argv) {
 
     char buf[BUFSIZE] = {'\0'};
     SADataRow row;
+    Arena* arena;
+    arena_create(&arena, (sizeof(SADataRow) + sizeof(String)) * MAX_TBL_SIZE);
 
     hash_table_t* cities;
     hash_function hashfunc = &myhash; 
@@ -77,32 +79,26 @@ int main(int argc, char** argv) {
             stats->sum += row.temperature;
             stats->num_lines++;
         } else {
-            ht_twos_pow_insert(cities, sa_string_to_char_arr(&row.location), sa_datarow_to_statsnode(&row));
+            ht_twos_pow_insert(cities, sa_string_to_char_arr(arena, &row.location), sa_datarow_to_statsnode(arena, &row));
         }
     }
     
     fclose(infile);
-
-    printf("Lines of input file covered: %zu\n", num_lines);
-    printf("Size: %zu, capacity: %zu\n", ht_size(cities), ht_capacity(cities));
-    
+   
+    // Sort hash table
+    ht_sort_by_key(cities, qsort_comparer);
     print_stats(cities);
-
-    for (size_t i=0; i<ht_capacity(cities); ++i) {
-        KeyValuePair kv = ht_at_index(cities, i);
-        if (kv.key == NULL) continue;
-        free((char*)kv.key);
-        free(kv.value);
-    }
+    
+    arena_destroy(arena);
     ht_destroy(cities);
     free(cities);
     
     return EXIT_SUCCESS;
 }
 
-static void stats_init(Stats** statrow, double min, double max, double sum) {
+static void stats_init(Arena* arena, Stats** statrow, double min, double max, double sum) {
     if (statrow==NULL) return;
-    *statrow = (Stats*)malloc(sizeof(Stats));
+    *statrow = (Stats*)arena_allocate(arena, sizeof(Stats));
     (*statrow)->min = min;
     (*statrow)->max = max;
     (*statrow)->sum = sum;
@@ -111,22 +107,22 @@ static void stats_init(Stats** statrow, double min, double max, double sum) {
 
 static void stats_print(Stats* statrow) {
     if (statrow==NULL) return;
-    printf("=%.1f/%.1f/%.1f\n", statrow->min, statrow->max, statrow->sum / statrow->num_lines);
+    printf("=%.1f/%.1f/%.1f", statrow->min, statrow->sum / statrow->num_lines, statrow->max);
 }
 
-static void* datarow_to_statsnode(DataRow* row) {
+static void* datarow_to_statsnode(Arena* arena, DataRow* row) {
     if (row==NULL) return NULL;
     
     Stats* statrow;
-    stats_init(&statrow, row->temperature, row->temperature, row->temperature);
+    stats_init(arena, &statrow, row->temperature, row->temperature, row->temperature);
     return (void*)statrow;
 }
 
-static void* sa_datarow_to_statsnode(SADataRow* row) {
+static void* sa_datarow_to_statsnode(Arena* arena, SADataRow* row) {
     if (row==NULL) return NULL;
     
     Stats* statrow;
-    stats_init(&statrow, row->temperature, row->temperature, row->temperature);
+    stats_init(arena, &statrow, row->temperature, row->temperature, row->temperature);
     return (void*)statrow;
 }
 
@@ -166,9 +162,9 @@ static size_t djb2(void* key, hash_table_t* table) {
     return hash & (ht_capacity(table)-1);
 }
 
-static char* sa_string_to_char_arr(SAString* str) {
+static char* sa_string_to_char_arr(Arena* arena, SAString* str) {
     if (str==NULL) return NULL;
-    char* res = (char*)calloc(str->length+1, sizeof(char));
+    char* res = (char*)arena_allocate(arena, (str->length+1) * sizeof(char));
     memcpy(res, str->data, str->length);
     res[str->length] = '\0';
     return res;
@@ -176,18 +172,30 @@ static char* sa_string_to_char_arr(SAString* str) {
 
 static void print_stats(hash_table_t* table) {
     if (table==NULL) return;
-    for (size_t i=0; i<ht_capacity(table); ++i) {
+    size_t capacity = ht_capacity(table);
+    printf("{");
+    for (size_t i=0; i<capacity-1; ++i) {
         KeyValuePair kv = ht_at_index(table, i);
         char* key = (char*)kv.key;
         Stats* value = (Stats*)kv.value;
-        if (key==NULL) continue;
-        if (value==NULL) continue;
+        if (key==NULL||value==NULL) continue;
         printf("%s", key);
         stats_print(value);
+        printf(", ");
     }
+    KeyValuePair kv = ht_at_index(table, capacity-1);
+    char* key = (char*)kv.key;
+    Stats* value = (Stats*)kv.value;
+    if (key==NULL||value==NULL) {
+        printf("}\n");
+        return;
+    };
+    printf("%s", key);
+    stats_print(value);
+    printf("}\n");
 }
 
-static int keycmp(void* dictkey, void* extkey) {
+static int keycmp(const void* dictkey, const void* extkey) {
     if (dictkey==NULL || extkey==NULL) {
         fprintf(stderr, "null pointer given.\n");
         exit(1);
@@ -195,4 +203,13 @@ static int keycmp(void* dictkey, void* extkey) {
     char* str1 = (char*)dictkey;
     char* str2 = (char*)extkey;
     return strcmp(str1, str2);
+}
+
+static int qsort_comparer(const void* kv1, const void* kv2) {
+    if (kv1==NULL || kv2==NULL) return 0;
+    void* key1 = ((KeyValuePair*)kv1)->key;
+    void* key2 = ((KeyValuePair*)kv2)->key;
+    if (key1==NULL) return -1;
+    if (key2==NULL) return 1;
+    return strcmp((char*)key1, (char*)key2);
 }

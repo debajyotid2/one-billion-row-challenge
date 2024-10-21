@@ -46,6 +46,11 @@ void ht_init(hash_table_t **table, size_t capacity, hash_function a_hashfunc, ke
     memset((*table)->pairs, 0x0, capacity*sizeof(KeyValuePair));
 }
 
+void ht_sort_by_key(hash_table_t* table, int (*qcmp)(const void*, const void*)) {
+    if (table==NULL || qcmp==NULL) return;
+    qsort(table->pairs, table->capacity, sizeof(KeyValuePair), qcmp);
+}
+
 void** ht_values(hash_table_t *table) {
     if (table==NULL) return NULL;
     void** values = (void**)calloc(table->size, sizeof(void*));

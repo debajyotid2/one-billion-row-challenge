@@ -10,7 +10,7 @@ set(CMAKE_PREFIX_PATH /usr/local/lib /opt/OpenBLAS/lib)
 set(CMAKE_MODULE_PATH ${PROJECT_ROOT_DIR}/cmake)
 
 set(DEPENDENCIES openblas matlibr yatpool criterion)
-set(EXECUTABLES create_measurements analyze_v1 analyze_v2 analyze_v3 analyze_v4)
+set(EXECUTABLES create_measurements analyze_v1 analyze_v2 analyze_v3)
 
 file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/src/*.c)
 
